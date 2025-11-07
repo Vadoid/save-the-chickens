@@ -201,6 +201,69 @@ FROM
 echo "  ✅ actuals_vs_forecast view created"
 echo ""
 
+# Step 5: Create view products_with_recipes
+echo "Step 5: Creating products_with_recipes view..."
+# Delete view if it exists, then create it
+bq rm -f "${DATASET_ID}.products_with_recipes" 2>/dev/null || true
+bq mk --use_legacy_sql=false \
+    --view "
+SELECT
+  pm.ProductNumber,
+  pm.ProductDescription,
+  pm.ProductCategory,
+  pm.ShelfLifeDays AS ProductShelfLifeDays,
+  pm.StorageRequirements AS ProductStorageRequirements,
+  pm.RecipeID,
+  r.IngredientName,
+  r.IngredientQuantity,
+  r.Unit,
+  r.PreparationMethod,
+  r.IngredientShelfLifeDays
+FROM
+  \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
+LEFT JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.Recipes\` AS r
+ON
+  pm.RecipeID = r.RecipeID
+WHERE
+  pm.RecipeID IS NOT NULL
+ORDER BY
+  pm.ProductNumber,
+  r.IngredientName
+" \
+    "${DATASET_ID}.products_with_recipes"
+echo "  ✅ products_with_recipes view created"
+echo ""
+
+# Step 6: Create view customer_feedback_with_products
+echo "Step 6: Creating customer_feedback_with_products view..."
+# Delete view if it exists, then create it
+bq rm -f "${DATASET_ID}.customer_feedback_with_products" 2>/dev/null || true
+bq mk --use_legacy_sql=false \
+    --view "
+SELECT
+  pm.ProductNumber,
+  pm.ProductDescription,
+  pm.ProductCategory,
+  cf.CustomerName,
+  cf.ProductName AS FeedbackProductName,
+  cf.FeedbackDate,
+  cf.Rating,
+  cf.Description AS FeedbackDescription
+FROM
+  \`${PROJECT_ID}.${DATASET_NAME}.CustomerFeedback\` AS cf
+LEFT JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
+ON
+  LOWER(pm.ProductDescription) LIKE CONCAT('%', LOWER(cf.ProductName), '%')
+ORDER BY
+  pm.ProductNumber,
+  cf.FeedbackDate DESC
+" \
+    "${DATASET_ID}.customer_feedback_with_products"
+echo "  ✅ customer_feedback_with_products view created"
+echo ""
+
 echo "=========================================="
 echo "✅ Setup complete!"
 echo "=========================================="
@@ -214,5 +277,7 @@ echo "  - WasteTracking"
 echo "Views created:"
 echo "  - fda_chicken_enforcements"
 echo "  - actuals_vs_forecast (with AI forecast)"
+echo "  - products_with_recipes"
+echo "  - customer_feedback_with_products"
 echo "=========================================="
 

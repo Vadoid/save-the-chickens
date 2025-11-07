@@ -5,6 +5,15 @@ import dotenv
 import os # Import os for better path handling (optional, but good practice)
 import sys # Import sys for exiting the application (critical for Uvicorn stability)
 from pathlib import Path
+import logging
+
+# Configure logging to reduce verbosity in dev UI
+# Allow environment variable to control logging level (default: WARNING to hide tool call details)
+LOG_LEVEL = os.getenv("ADK_LOG_LEVEL", "WARNING").upper()
+logging.getLogger("google.adk").setLevel(getattr(logging, LOG_LEVEL, logging.WARNING))
+logging.getLogger("google.genai").setLevel(getattr(logging, LOG_LEVEL, logging.WARNING))
+# Keep general logging at INFO level for important messages
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 # Get the project root directory (parent of chickens_app)
 PROJECT_ROOT = Path(__file__).parent.parent

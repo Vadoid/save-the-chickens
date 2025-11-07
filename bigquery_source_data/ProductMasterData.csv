@@ -1,14 +1,13 @@
-ProductNumber,ProductDescription,ProductCategory,ShelfLifeDays,StorageRequirements,DueDate
-1001,Whole Roasted Chicken - Premium free-range, whole bird,Whole Chicken,3,Refrigerated 2-4°C,2024-12-31
-1002,Grilled Chicken Breast - Marinated with lemon and herbs,Chicken Parts,2,Refrigerated 2-4°C,2024-12-31
-1003,Braised Chicken Thighs - Slow-cooked in stock with vegetables,Chicken Parts,3,Refrigerated 2-4°C,2024-12-31
-1004,Buffalo Chicken Wings - Spicy fried wings,Chicken Parts,2,Refrigerated 2-4°C,2024-12-31
-1005,Chicken Liver Pâté - Smooth liver spread,Chicken Byproducts,5,Refrigerated 2-4°C,2024-12-31
-1006,Chicken Stock - Rich bone broth,Chicken Byproducts,7,Refrigerated 2-4°C,2024-12-31
-1007,Rendered Chicken Fat - Cooking fat from skin,Chicken Byproducts,30,Refrigerated 2-4°C,2024-12-31
-1008,Chicken Pot Pie - Classic pastry with chicken and vegetables,Chicken Pastries,5,Refrigerated 2-4°C,2024-12-31
-1009,Chicken Empanadas - Spiced ground chicken in pastry,Chicken Pastries,3,Refrigerated 2-4°C,2024-12-31
-1010,Chicken Croissant - Herb-marinated chicken in buttery pastry,Chicken Pastries,2,Refrigerated 2-4°C,2024-12-31
-1011,Chicken Drumsticks - Seasoned and ready to cook,Chicken Parts,2,Refrigerated 2-4°C,2024-12-31
-1012,Chicken Sausage Links - Spiced ground chicken,Chicken Byproducts,4,Refrigerated 2-4°C,2024-12-31
-
+ProductNumber,ProductDescription,ProductCategory,ShelfLifeDays,StorageRequirements,RecipeID
+1001,"Whole Roasted Chicken - Premium free-range, whole bird",whole bird,3,Refrigerated 2-4°C,R001
+1002,Grilled Chicken Breast - Marinated with lemon and herbs,Chicken Parts,2,Refrigerated 2-4°C,R002
+1003,Braised Chicken Thighs - Slow-cooked in stock with vegetables,Chicken Parts,3,Refrigerated 2-4°C,R003
+1004,Buffalo Chicken Wings - Spicy fried wings,Chicken Parts,2,Refrigerated 2-4°C,R004
+1005,Chicken Liver Pâté - Smooth liver spread,Chicken Byproducts,5,Refrigerated 2-4°C,R005
+1006,Chicken Stock - Rich bone broth,Chicken Byproducts,7,Refrigerated 2-4°C,R006
+1007,Rendered Chicken Fat - Cooking fat from skin,Chicken Byproducts,30,Refrigerated 2-4°C,R007
+1008,Chicken Pot Pie - Classic pastry with chicken and vegetables,Chicken Pastries,5,Refrigerated 2-4°C,R008
+1009,Chicken Empanadas - Spiced ground chicken in pastry,Chicken Pastries,3,Refrigerated 2-4°C,R009
+1010,Chicken Croissant - Herb-marinated chicken in buttery pastry,Chicken Pastries,2,Refrigerated 2-4°C,R010
+1011,Chicken Drumsticks - Seasoned and ready to cook,Chicken Parts,2,Refrigerated 2-4°C,
+1012,Chicken Sausage Links - Spiced ground chicken,Chicken Byproducts,4,Refrigerated 2-4°C,
