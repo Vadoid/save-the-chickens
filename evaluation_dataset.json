@@ -1,0 +1,46 @@
+[
+   {
+       "prompt": "What tables are available in the dataset `save_the_chickens`?",
+       "reference": "The tables available in the dataset `save_the_chickens` are: `CustomerFeedback`, `ProductMasterData`, `actuals_vs_forecast`, `fda_chicken_enforcements`, `product_sales`, `Recipes`, `WasteTracking`."
+   },
+   {
+       "prompt": "How many chicken products are in the master data in total?",
+       "reference": "There are 12 chicken products in total."
+   },
+   {
+       "prompt": "Find the description of product 1002.",
+       "reference": "The description of product 1002 is `Grilled Chicken Breast - Marinated with lemon and herbs`."
+   },
+   {
+       "prompt": "How many sales lineitems we have?",
+       "reference": "We have 5,000 sales lineitems."
+   },
+   {
+       "prompt": "Identify the most common reasons for waste for each product category, along with the number of occurrences.",
+       "reference": "The most common waste reason is `Expired` and occurs most frequently in chicken products."
+   },
+   {
+       "prompt": "Identify customers who consistently give either very high (5) or very low (1) ratings across different products.",
+       "reference": "Customer with consistently low ratings is `Downtown Market` and with consistently high is `University Food Court`."
+   },
+   {
+       "prompt": "Find the top 3 products with the most negative feedback (ratings 1 or 2).",
+       "reference": "The top product with negative feedback is `Whole Roasted Chicken`."
+   },
+   {
+       "prompt": "Find the ProductNumber with the highest TotalRevenue on a single day.",
+       "reference": "1005"
+   },
+   {
+       "prompt": "Find the product number with the minimum average price per unit.",
+       "reference": "Product 1007 with avg price per unit varies"
+   },
+   {
+       "prompt": "Which products are approaching their due date and at risk of waste?",
+       "reference": "Products with DueDate within 2 days of current date are at risk."
+   },
+   {
+       "prompt": "What is the total waste cost for expired products this month?",
+       "reference": "Total waste cost for expired products needs to be calculated from WasteTracking table."
+   }
+]

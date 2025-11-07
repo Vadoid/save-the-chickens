@@ -1,0 +1,22 @@
+WasteID,ProductID,WasteDate,WasteQuantity,WasteReason,Cost,Notes
+W001,1001,2024-01-15,5.0,Expired,45.50,Whole chickens past sell-by date
+W002,1002,2024-01-18,12.0,Expired,78.00,Chicken breasts expired before sale
+W003,1003,2024-02-02,8.0,Damaged,52.00,Packaging compromised during delivery
+W004,1004,2024-02-10,20.0,Overstock,120.00,Excess inventory from promotion
+W005,1005,2024-02-15,3.0,Expired,18.00,Chicken liver past freshness date
+W006,1006,2024-02-20,15.0,Expired,67.50,Stock containers expired
+W007,1007,2024-03-01,10.0,Damaged,35.00,Containers damaged in transit
+W008,1008,2024-03-05,6.0,Expired,42.00,Pot pies past expiration
+W009,1009,2024-03-12,25.0,Overstock,112.50,Slow-moving empanadas
+W010,1010,2024-03-18,8.0,Expired,56.00,Croissants past best-by date
+W011,1001,2024-03-25,7.0,Expired,63.50,Whole chickens not sold in time
+W012,1002,2024-04-02,15.0,Damaged,97.50,Temperature abuse during transport
+W013,1003,2024-04-08,9.0,Expired,58.50,Thighs expired
+W014,1004,2024-04-15,18.0,Overstock,108.00,Excess wings from event cancellation
+W015,1005,2024-04-22,4.0,Expired,24.00,Liver past use-by date
+W016,1006,2024-05-01,12.0,Expired,54.00,Stock expired
+W017,1007,2024-05-08,6.0,Damaged,21.00,Fat containers leaked
+W018,1008,2024-05-15,10.0,Expired,70.00,Pot pies expired
+W019,1009,2024-05-22,30.0,Overstock,135.00,Large batch of empanadas unsold
+W020,1010,2024-06-01,12.0,Expired,84.00,Croissants expired
+

@@ -1,0 +1,44 @@
+RecipeID,ProductID,IngredientName,IngredientQuantity,Unit,PreparationMethod
+R001,1001,Whole Chicken,1.0,each,Roast at 350°F for 90 minutes
+R001,1001,Olive Oil,2.0,tbsp,Brush on before roasting
+R001,1001,Salt,1.0,tsp,Season generously
+R001,1001,Black Pepper,0.5,tsp,Season to taste
+R002,1002,Chicken Breast,500.0,grams,Grill for 6-8 minutes per side
+R002,1002,Lemon Juice,30.0,ml,Marinate for 30 minutes
+R002,1002,Garlic,3.0,cloves,Minced and mixed with marinade
+R002,1002,Olive Oil,1.0,tbsp,Part of marinade
+R003,1003,Chicken Thighs,400.0,grams,Braise for 45 minutes
+R003,1003,Chicken Stock,250.0,ml,Liquid for braising
+R003,1003,Onions,2.0,each,Diced and sautéed
+R003,1003,Thyme,1.0,tsp,Fresh or dried
+R004,1004,Chicken Wings,600.0,grams,Fry at 375°F for 12 minutes
+R004,1004,Flour,100.0,grams,For coating
+R004,1004,Paprika,1.0,tsp,Seasoning mix
+R004,1004,Salt,1.0,tsp,Seasoning mix
+R005,1005,Chicken Liver,300.0,grams,Sauté for 5-7 minutes
+R005,1005,Butter,50.0,grams,For sautéing
+R005,1005,Onions,1.0,each,Caramelized
+R005,1005,White Wine,100.0,ml,Deglaze pan
+R006,1006,Chicken Stock Base,500.0,ml,Simmer for 2 hours
+R006,1006,Chicken Bones,1.0,kg,For stock base
+R006,1006,Carrots,2.0,each,Chopped
+R006,1006,Celery,2.0,stalks,Chopped
+R006,1006,Onions,1.0,each,Quartered
+R007,1007,Chicken Fat,200.0,grams,Render slowly over low heat
+R007,1007,Chicken Skin,500.0,grams,Source of fat
+R008,1008,Chicken Pot Pie Filling,400.0,grams,Pre-cooked chicken and vegetables
+R008,1008,Puff Pastry,250.0,grams,Top crust
+R008,1008,Chicken Breast,300.0,grams,Cubed and cooked
+R008,1008,Peas,100.0,grams,Frozen
+R008,1008,Carrots,100.0,grams,Diced
+R009,1009,Chicken Empanada Filling,300.0,grams,Spiced ground chicken
+R009,1009,Empanada Dough,200.0,grams,Per batch of 12
+R009,1009,Chicken Thigh,250.0,grams,Shredded
+R009,1009,Onions,1.0,each,Diced
+R009,1009,Cumin,1.0,tsp,Spice blend
+R010,1010,Chicken Croissant Filling,150.0,grams,Herb-marinated chicken
+R010,1010,Croissant Dough,80.0,grams,Per croissant
+R010,1010,Chicken Breast,120.0,grams,Sliced thin
+R010,1010,Herbs,5.0,grams,Mixed herbs
+R010,1010,Mayonnaise,30.0,grams,Binding agent
+
