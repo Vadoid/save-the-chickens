@@ -344,6 +344,161 @@ ORDER BY ss.ExpiryDate;
 
 ---
 
+#### 5. store_stock_current
+**Description:** Current stock per store with product details, expiry tracking, and **automatic date normalization**.
+
+**Columns:**
+- Store fields: `StoreID`, `StoreName`, `City`, `Postcode`, `Latitude`, `Longitude`
+- Stock fields: `StockID`, `ProductNumber`, `Quantity`, `BatchNumber`, `StorageLocation`
+- Product fields: `ProductDescription`, `ProductCategory`, `ShelfLifeDays`
+- **Normalized dates:** `StockDate`, `DeliveryDate`, `ExpiryDate` (automatically adjusted to current date)
+- Calculated: `DaysUntilExpiry` (days until expiry from current date)
+
+**Date Normalization:**
+This view automatically normalizes all dates to be current, regardless of when the CSV data was created. See the [Date Normalization](#date-normalization-in-stock-views) section below for details.
+
+**Use Cases:**
+- Query current stock levels: "Show me stock of product 1001 in store S001 as of today"
+- Expiry tracking: "Which items in store S001 are expiring within 2 days?"
+- Stock analysis with current dates
+
+---
+
+#### 6. store_stock_expiring_soon
+**Description:** Items expiring within 3 days with urgency categorization and **automatic date normalization**.
+
+**Columns:**
+- Store fields: `StoreID`, `StoreName`, `City`
+- Product fields: `ProductNumber`, `ProductDescription`, `ProductCategory`
+- Stock fields: `Quantity`, `BatchNumber`, `StorageLocation`
+- **Normalized dates:** `ExpiryDate` (automatically adjusted to current date)
+- Calculated: `DaysUntilExpiry`, `ExpiryStatus` (EXPIRED, CRITICAL, URGENT, WARNING)
+
+**Date Normalization:**
+This view automatically normalizes all dates to be current. Items are filtered to show only those expiring within 3 days from the current date. See the [Date Normalization](#date-normalization-in-stock-views) section below for details.
+
+**Expiry Status Categories:**
+- `EXPIRED`: Expiry date has passed (≤0 days)
+- `CRITICAL`: Expires within 1 day
+- `URGENT`: Expires within 2 days
+- `WARNING`: Expires within 3 days
+
+**Use Cases:**
+- Identify items requiring immediate action
+- Prioritize stock movement for expiring items
+- Waste prevention alerts
+
+---
+
+#### 7. distribution_stock_current
+**Description:** Current stock at distribution facilities with product details and **automatic date normalization**.
+
+**Columns:**
+- Facility fields: `FacilityID`, `FacilityName`, `City`, `Postcode`, `Latitude`, `Longitude`
+- Stock fields: `StockID`, `ProductNumber`, `Quantity`, `BatchNumber`, `StorageLocation`
+- Product fields: `ProductDescription`, `ProductCategory`, `ShelfLifeDays`
+- **Normalized dates:** `StockDate`, `DeliveryDate`, `ExpiryDate` (automatically adjusted to current date)
+- Calculated: `DaysUntilExpiry` (days until expiry from current date)
+
+**Date Normalization:**
+This view automatically normalizes all dates to be current. See the [Date Normalization](#date-normalization-in-stock-views) section below for details.
+
+**Use Cases:**
+- Plan distribution to stores: "Which distribution center has stock of product 1001 to supply London stores?"
+- Bulk inventory management: "What's the total stock across all distribution facilities?"
+- Distribution route optimization
+
+---
+
+#### 8. store_stock_summary
+**Description:** Aggregated stock summary per store/product with **automatic date normalization**.
+
+**Columns:**
+- Store fields: `StoreID`, `StoreName`, `City`, `Latitude`, `Longitude`
+- Product fields: `ProductNumber`, `ProductDescription`, `ProductCategory`
+- Aggregated: `TotalQuantity`, `BatchCount`, `AvgQuantityPerBatch`
+- **Normalized dates:** `EarliestExpiryDate`, `LatestExpiryDate` (automatically adjusted to current date)
+
+**Date Normalization:**
+This view automatically normalizes expiry dates to be current. See the [Date Normalization](#date-normalization-in-stock-views) section below for details.
+
+**Use Cases:**
+- High-level stock analysis per store
+- Identify stores with excess stock (above average)
+- Identify stores with low stock (below average)
+- Stock movement planning
+
+---
+
+#### 9. store_proximity
+**Description:** Distance calculations between all store pairs for stock movement planning.
+
+**Columns:**
+- Source store: `StoreFromID`, `StoreFromName`, `StoreFromCity`, `StoreFromLatitude`, `StoreFromLongitude`
+- Destination store: `StoreToID`, `StoreToName`, `StoreToCity`, `StoreToLatitude`, `StoreToLongitude`
+- Calculated: `DistanceKm` (geographic distance in kilometers), `ProximityType` (Same City / Different City)
+
+**Use Cases:**
+- Find nearest stores for stock transfers
+- Plan efficient stock movement routes
+- Optimize logistics based on proximity
+
+---
+
+### Date Normalization in Stock Views
+
+**Problem:**
+The CSV source files contain stock data with fixed dates (e.g., 2024-12-15). When queries are run at arbitrary dates (e.g., in 2025 or later), the views would show no results because all expiry dates are in the past.
+
+**Solution:**
+All stock management views (`store_stock_current`, `store_stock_expiring_soon`, `distribution_stock_current`, `store_stock_summary`) automatically normalize dates to be current, regardless of when the CSV data was created.
+
+**How It Works:**
+
+1. **Date Offset Calculation:**
+   The views calculate the difference between the latest `StockDate` in the data and `CURRENT_DATE()`:
+   ```sql
+   WITH DateOffset AS (
+     SELECT DATE_DIFF(CURRENT_DATE(), MAX(StockDate), DAY) AS offset_days
+     FROM StoreStock
+   )
+   ```
+
+2. **Date Adjustment:**
+   All dates (`StockDate`, `DeliveryDate`, `ExpiryDate`) are adjusted by adding the offset:
+   ```sql
+   DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS ExpiryDate
+   ```
+
+3. **Automatic Current Dates:**
+   This ensures that:
+   - If CSV data has dates from 2024-12-15 and you query on 2025-01-15, dates are shifted forward by ~31 days
+   - All dates in the view output appear current
+   - `DaysUntilExpiry` is calculated correctly relative to today
+   - The `store_stock_expiring_soon` view correctly filters items expiring within 3 days from today
+
+**Example:**
+- **CSV Data:** StockDate = 2024-12-15, ExpiryDate = 2024-12-18
+- **Query Date:** 2025-01-20
+- **Offset Calculated:** 36 days (2025-01-20 - 2024-12-15)
+- **View Output:** StockDate = 2025-01-20, ExpiryDate = 2025-01-23
+- **DaysUntilExpiry:** 3 days (2025-01-23 - 2025-01-20)
+
+**Benefits:**
+- ✅ Views always show current, relevant data
+- ✅ No need to manually update CSV dates
+- ✅ Expiry tracking works correctly at any time
+- ✅ Stock movement planning uses current dates
+- ✅ Works seamlessly with any query date
+
+**Important Notes:**
+- Date normalization only affects the **view output**, not the underlying table data
+- The base tables (`StoreStock`, `DistributionStock`) retain their original CSV dates
+- Date normalization is recalculated each time the view is queried
+- If you update the CSV with new dates, the views will automatically adjust to the new base date
+
+---
+
 ## Data Relationships (ER Model)
 
 ### Entity-Relationship Diagram
@@ -515,8 +670,26 @@ bq load --source_format=CSV --skip_leading_rows=1 --autodetect --replace \
 
 ### Stock Queries
 
-**Current stock per store:**
+**Note:** The stock management views (`store_stock_current`, `store_stock_expiring_soon`, etc.) automatically normalize dates to be current. When querying these views, all dates are already adjusted to today's date. See the [Date Normalization](#date-normalization-in-stock-views) section for details.
+
+**Current stock per store (using view - RECOMMENDED):**
 ```sql
+-- Using the view with automatic date normalization
+SELECT 
+  StoreName,
+  ProductDescription,
+  Quantity,
+  ExpiryDate,
+  DaysUntilExpiry,
+  BatchNumber
+FROM store_stock_current
+WHERE StoreName LIKE '%London Central%'
+ORDER BY StoreName, ProductDescription;
+```
+
+**Current stock per store (querying table directly):**
+```sql
+-- Querying the base table (dates are NOT normalized)
 SELECT 
   s.StoreName,
   pm.ProductDescription,
@@ -526,12 +699,34 @@ SELECT
 FROM StoreStock ss
 JOIN Stores s ON ss.StoreID = s.StoreID
 JOIN ProductMasterData pm ON ss.ProductNumber = pm.ProductNumber
-WHERE ss.StockDate = CURRENT_DATE()
+WHERE ss.StockDate = (
+  SELECT MAX(StockDate)
+  FROM StoreStock
+  WHERE StoreID = ss.StoreID AND ProductNumber = ss.ProductNumber
+)
 ORDER BY s.StoreName, pm.ProductDescription;
 ```
 
-**Items expiring soon:**
+**Items expiring soon (using view - RECOMMENDED):**
 ```sql
+-- Using the view with automatic date normalization and expiry status
+SELECT 
+  StoreName,
+  ProductDescription,
+  Quantity,
+  ExpiryDate,
+  DaysUntilExpiry,
+  ExpiryStatus,
+  BatchNumber
+FROM store_stock_expiring_soon
+WHERE StoreID = 'S001'
+ORDER BY ExpiryDate;
+```
+
+**Items expiring soon (querying table directly):**
+```sql
+-- Querying the base table (dates are NOT normalized)
+-- Note: This will only work if CSV dates are current
 SELECT 
   s.StoreName,
   pm.ProductDescription,
@@ -541,7 +736,12 @@ SELECT
 FROM StoreStock ss
 JOIN Stores s ON ss.StoreID = s.StoreID
 JOIN ProductMasterData pm ON ss.ProductNumber = pm.ProductNumber
-WHERE ss.ExpiryDate <= DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY)
+WHERE ss.StockDate = (
+  SELECT MAX(StockDate)
+  FROM StoreStock
+  WHERE StoreID = ss.StoreID AND ProductNumber = ss.ProductNumber
+)
+  AND ss.ExpiryDate <= DATE_ADD(CURRENT_DATE(), INTERVAL 2 DAY)
 ORDER BY ss.ExpiryDate;
 ```
 
@@ -663,6 +863,12 @@ Stock data should be updated regularly (daily or real-time) to reflect current i
 - Use `BatchNumber` for traceability
 - Calculate `ExpiryDate` as `DeliveryDate + ShelfLifeDays` from ProductMasterData
 
+**Date Normalization Note:**
+- The stock management views automatically normalize dates, so you don't need to update CSV dates to be current
+- However, if you update the CSV with new stock data, the views will automatically adjust to the new base date
+- The views calculate the offset from the latest `StockDate` in the data, so adding new records with current dates will shift all normalized dates accordingly
+- For production use, consider updating stock data regularly to maintain accurate inventory tracking
+
 ### Adding New Stores
 
 1. Add new row to `Stores.csv` with unique `StoreID`
@@ -704,6 +910,7 @@ bigquery_source_data/
 - **Fuzzy Matching:** CustomerFeedback uses fuzzy matching (LIKE patterns) to link to products
 - **Batch Tracking:** All stock records include batch numbers for traceability
 - **Proximity Clusters:** Stores are grouped in cities to enable realistic stock movement scenarios
+- **Date Normalization:** All stock management views (`store_stock_current`, `store_stock_expiring_soon`, `distribution_stock_current`, `store_stock_summary`) automatically normalize dates to be current, regardless of when the CSV data was created. This ensures expiry tracking and stock queries work correctly at any time. See the [Date Normalization](#date-normalization-in-stock-views) section for complete details.
 
 ---
 

@@ -314,6 +314,10 @@ echo "Step 7: Creating store_stock_current view..."
 bq rm -f "${DATASET_ID}.store_stock_current" 2>/dev/null || true
 bq mk --use_legacy_sql=false \
     --view "
+WITH DateOffset AS (
+  SELECT DATE_DIFF(CURRENT_DATE(), MAX(StockDate), DAY) AS offset_days
+  FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
+)
 SELECT
   s.StoreID,
   s.StoreName,
@@ -326,11 +330,15 @@ SELECT
   pm.ProductDescription,
   pm.ProductCategory,
   pm.ShelfLifeDays,
-  ss.StockDate,
+  DATE_ADD(ss.StockDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS StockDate,
   ss.Quantity,
-  ss.DeliveryDate,
-  ss.ExpiryDate,
-  DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) AS DaysUntilExpiry,
+  DATE_ADD(ss.DeliveryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS DeliveryDate,
+  DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS ExpiryDate,
+  DATE_DIFF(
+    DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY),
+    CURRENT_DATE(),
+    DAY
+  ) AS DaysUntilExpiry,
   ss.BatchNumber,
   ss.StorageLocation
 FROM
@@ -352,7 +360,7 @@ WHERE
 ORDER BY
   s.StoreName,
   pm.ProductDescription,
-  ss.ExpiryDate
+  DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY)
 " \
     "${DATASET_ID}.store_stock_current"
 echo "  ✅ store_stock_current view created"
@@ -364,45 +372,70 @@ echo "Step 8: Creating store_stock_expiring_soon view..."
 bq rm -f "${DATASET_ID}.store_stock_expiring_soon" 2>/dev/null || true
 bq mk --use_legacy_sql=false \
     --view "
+WITH DateOffset AS (
+  SELECT DATE_DIFF(CURRENT_DATE(), MAX(StockDate), DAY) AS offset_days
+  FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
+),
+StockWithAdjustedDates AS (
+  SELECT
+    s.StoreID,
+    s.StoreName,
+    s.City,
+    ss.ProductNumber,
+    pm.ProductDescription,
+    pm.ProductCategory,
+    ss.Quantity,
+    DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS ExpiryDate,
+    DATE_DIFF(
+      DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY),
+      CURRENT_DATE(),
+      DAY
+    ) AS DaysUntilExpiry,
+    ss.BatchNumber,
+    ss.StorageLocation
+  FROM
+    \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\` AS ss
+  JOIN
+    \`${PROJECT_ID}.${DATASET_NAME}.Stores\` AS s
+  ON
+    ss.StoreID = s.StoreID
+  JOIN
+    \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
+  ON
+    ss.ProductNumber = pm.ProductNumber
+  WHERE
+    ss.StockDate = (
+      SELECT MAX(StockDate)
+      FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
+      WHERE StoreID = ss.StoreID AND ProductNumber = ss.ProductNumber
+    )
+)
 SELECT
-  s.StoreID,
-  s.StoreName,
-  s.City,
-  ss.ProductNumber,
-  pm.ProductDescription,
-  pm.ProductCategory,
-  ss.Quantity,
-  ss.ExpiryDate,
-  DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) AS DaysUntilExpiry,
-  ss.BatchNumber,
-  ss.StorageLocation,
+  StoreID,
+  StoreName,
+  City,
+  ProductNumber,
+  ProductDescription,
+  ProductCategory,
+  Quantity,
+  ExpiryDate,
+  DaysUntilExpiry,
+  BatchNumber,
+  StorageLocation,
   CASE
-    WHEN DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) <= 0 THEN 'EXPIRED'
-    WHEN DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) <= 1 THEN 'CRITICAL'
-    WHEN DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) <= 2 THEN 'URGENT'
+    WHEN DaysUntilExpiry <= 0 THEN 'EXPIRED'
+    WHEN DaysUntilExpiry <= 1 THEN 'CRITICAL'
+    WHEN DaysUntilExpiry <= 2 THEN 'URGENT'
     ELSE 'WARNING'
   END AS ExpiryStatus
 FROM
-  \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\` AS ss
-JOIN
-  \`${PROJECT_ID}.${DATASET_NAME}.Stores\` AS s
-ON
-  ss.StoreID = s.StoreID
-JOIN
-  \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
-ON
-  ss.ProductNumber = pm.ProductNumber
+  StockWithAdjustedDates
 WHERE
-  ss.StockDate = (
-    SELECT MAX(StockDate)
-    FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
-    WHERE StoreID = ss.StoreID AND ProductNumber = ss.ProductNumber
-  )
-  AND ss.ExpiryDate <= DATE_ADD(CURRENT_DATE(), INTERVAL 3 DAY)
+  ExpiryDate <= DATE_ADD(CURRENT_DATE(), INTERVAL 3 DAY)
 ORDER BY
-  ss.ExpiryDate,
-  s.StoreName,
-  pm.ProductDescription
+  ExpiryDate,
+  StoreName,
+  ProductDescription
 " \
     "${DATASET_ID}.store_stock_expiring_soon"
 echo "  ✅ store_stock_expiring_soon view created"
@@ -414,6 +447,10 @@ echo "Step 9: Creating distribution_stock_current view..."
 bq rm -f "${DATASET_ID}.distribution_stock_current" 2>/dev/null || true
 bq mk --use_legacy_sql=false \
     --view "
+WITH DateOffset AS (
+  SELECT DATE_DIFF(CURRENT_DATE(), MAX(StockDate), DAY) AS offset_days
+  FROM \`${PROJECT_ID}.${DATASET_NAME}.DistributionStock\`
+)
 SELECT
   df.FacilityID,
   df.FacilityName,
@@ -426,11 +463,15 @@ SELECT
   pm.ProductDescription,
   pm.ProductCategory,
   pm.ShelfLifeDays,
-  ds.StockDate,
+  DATE_ADD(ds.StockDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS StockDate,
   ds.Quantity,
-  ds.DeliveryDate,
-  ds.ExpiryDate,
-  DATE_DIFF(ds.ExpiryDate, CURRENT_DATE(), DAY) AS DaysUntilExpiry,
+  DATE_ADD(ds.DeliveryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS DeliveryDate,
+  DATE_ADD(ds.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY) AS ExpiryDate,
+  DATE_DIFF(
+    DATE_ADD(ds.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY),
+    CURRENT_DATE(),
+    DAY
+  ) AS DaysUntilExpiry,
   ds.BatchNumber,
   ds.StorageLocation
 FROM
@@ -452,7 +493,7 @@ WHERE
 ORDER BY
   df.FacilityName,
   pm.ProductDescription,
-  ds.ExpiryDate
+  DATE_ADD(ds.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY)
 " \
     "${DATASET_ID}.distribution_stock_current"
 echo "  ✅ distribution_stock_current view created"
@@ -464,6 +505,10 @@ echo "Step 10: Creating store_stock_summary view..."
 bq rm -f "${DATASET_ID}.store_stock_summary" 2>/dev/null || true
 bq mk --use_legacy_sql=false \
     --view "
+WITH DateOffset AS (
+  SELECT DATE_DIFF(CURRENT_DATE(), MAX(StockDate), DAY) AS offset_days
+  FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
+)
 SELECT
   s.StoreID,
   s.StoreName,
@@ -474,8 +519,8 @@ SELECT
   pm.ProductDescription,
   pm.ProductCategory,
   SUM(ss.Quantity) AS TotalQuantity,
-  MIN(ss.ExpiryDate) AS EarliestExpiryDate,
-  MAX(ss.ExpiryDate) AS LatestExpiryDate,
+  MIN(DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY)) AS EarliestExpiryDate,
+  MAX(DATE_ADD(ss.ExpiryDate, INTERVAL (SELECT offset_days FROM DateOffset) DAY)) AS LatestExpiryDate,
   COUNT(DISTINCT ss.BatchNumber) AS BatchCount,
   AVG(ss.Quantity) AS AvgQuantityPerBatch
 FROM
