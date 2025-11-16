@@ -1,0 +1,5 @@
+FacilityID,FacilityName,Address,City,Postcode,Latitude,Longitude,FacilityType,PhoneNumber
+DF001,London Distribution Centre,500 Industrial Way,London,E14 9RT,51.5074,-0.1278,Distribution,020 7123 5000
+DF002,Manchester Distribution Hub,200 Logistics Park,Manchester,M17 1AA,53.4808,-2.2426,Distribution,0161 234 5000
+DF003,Birmingham Central Warehouse,300 Storage Road,Birmingham,B7 4BB,52.4862,-1.8904,Distribution,0121 345 5000
+

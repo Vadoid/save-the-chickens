@@ -1,0 +1,26 @@
+StoreID,StoreName,Address,City,Postcode,Latitude,Longitude,StoreType,PhoneNumber
+S001,London Central,123 Oxford Street,London,W1D 2HX,51.5154,-0.1419,Retail,020 7123 4567
+S002,London West End,89 Regent Street,London,W1B 4EH,51.5100,-0.1390,Retail,020 7123 4568
+S003,London Canary Wharf,45 Canada Square,London,E14 5AB,51.5045,-0.0195,Retail,020 7123 4569
+S004,London Stratford,12 Westfield Avenue,London,E20 1EJ,51.5436,-0.0030,Retail,020 7123 4570
+S005,Manchester North,45 Market Street,Manchester,M1 1PD,53.4808,-2.2426,Retail,0161 234 5678
+S006,Manchester Arndale,78 Arndale Centre,Manchester,M4 3AQ,53.4830,-2.2380,Retail,0161 234 5679
+S007,Manchester Trafford,34 The Orient,Manchester,M17 8AA,53.4648,-2.3500,Retail,0161 234 5680
+S008,Birmingham High Street,78 New Street,Birmingham,B2 4BA,52.4862,-1.8904,Retail,0121 345 6789
+S009,Birmingham Bullring,56 Bullring,Birmingham,B5 4BU,52.4770,-1.8950,Retail,0121 345 6790
+S010,Birmingham Mailbox,23 The Mailbox,Birmingham,B1 1RF,52.4750,-1.9100,Retail,0121 345 6791
+S011,Leeds City Centre,12 Briggate,Leeds,LS1 6ER,53.8008,-1.5491,Retail,0113 456 7890
+S012,Leeds Trinity,67 Trinity Walk,Leeds,LS1 5AT,53.7970,-1.5400,Retail,0113 456 7891
+S013,Edinburgh Royal Mile,56 High Street,Edinburgh,EH1 1TB,55.9533,-3.1883,Retail,0131 567 8901
+S014,Edinburgh Princes Street,34 Princes Street,Edinburgh,EH2 2AD,55.9510,-3.1960,Retail,0131 567 8902
+S015,Glasgow Buchanan,89 Buchanan Street,Glasgow,G1 3HL,55.8642,-4.2518,Retail,0141 678 9012
+S016,Glasgow St Enoch,23 St Enoch Square,Glasgow,G1 4BW,55.8570,-4.2550,Retail,0141 678 9013
+S017,Liverpool One,34 Paradise Street,Liverpool,L1 3BW,53.4084,-2.9916,Retail,0151 789 0123
+S018,Liverpool City Centre,67 Lord Street,Liverpool,L2 1TS,53.4050,-2.9850,Retail,0151 789 0124
+S019,Bristol Broadmead,67 Broadmead,Bristol,BS1 3DX,51.4545,-2.5879,Retail,0117 890 1234
+S020,Bristol Cabot Circus,45 Cabot Circus,Bristol,BS1 3BD,51.4580,-2.5800,Retail,0117 890 1235
+S021,Newcastle Eldon Square,23 Eldon Square,Newcastle upon Tyne,NE1 7RH,54.9783,-1.6178,Retail,0191 901 2345
+S022,Newcastle Metrocentre,12 Metrocentre,Gateshead,NE11 9YG,54.9580,-1.6650,Retail,0191 901 2346
+S023,Cardiff Queen Street,45 Queen Street,Cardiff,CF10 2AT,51.4816,-3.1791,Retail,029 2023 4567
+S024,Cardiff St Davids,78 St Davids Centre,Cardiff,CF10 2SD,51.4800,-3.1750,Retail,029 2023 4568
+S025,Sheffield Meadowhall,56 Meadowhall Way,Sheffield,S9 1EP,53.4170,-1.4120,Retail,0114 567 8901

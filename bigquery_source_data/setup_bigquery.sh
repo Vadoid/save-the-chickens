@@ -124,6 +124,50 @@ bq load \
     "${DATASET_ID}.WasteTracking" \
     "$SCRIPT_DIR/WasteTracking.csv"
 echo "  ✅ WasteTracking table created"
+
+# Table 6: Stores
+echo "  Creating Stores table..."
+bq load \
+    --source_format=CSV \
+    --skip_leading_rows=1 \
+    --autodetect \
+    --replace \
+    "${DATASET_ID}.Stores" \
+    "$SCRIPT_DIR/Stores.csv"
+echo "  ✅ Stores table created"
+
+# Table 7: DistributionFacilities
+echo "  Creating DistributionFacilities table..."
+bq load \
+    --source_format=CSV \
+    --skip_leading_rows=1 \
+    --autodetect \
+    --replace \
+    "${DATASET_ID}.DistributionFacilities" \
+    "$SCRIPT_DIR/DistributionFacilities.csv"
+echo "  ✅ DistributionFacilities table created"
+
+# Table 8: StoreStock
+echo "  Creating StoreStock table..."
+bq load \
+    --source_format=CSV \
+    --skip_leading_rows=1 \
+    --autodetect \
+    --replace \
+    "${DATASET_ID}.StoreStock" \
+    "$SCRIPT_DIR/StoreStock.csv"
+echo "  ✅ StoreStock table created"
+
+# Table 9: DistributionStock
+echo "  Creating DistributionStock table..."
+bq load \
+    --source_format=CSV \
+    --skip_leading_rows=1 \
+    --autodetect \
+    --replace \
+    "${DATASET_ID}.DistributionStock" \
+    "$SCRIPT_DIR/DistributionStock.csv"
+echo "  ✅ DistributionStock table created"
 echo ""
 
 # Step 3: Create view fda_chicken_enforcements
@@ -264,6 +308,247 @@ ORDER BY
 echo "  ✅ customer_feedback_with_products view created"
 echo ""
 
+# Step 7: Create view store_stock_current
+echo "Step 7: Creating store_stock_current view..."
+# Delete view if it exists, then create it
+bq rm -f "${DATASET_ID}.store_stock_current" 2>/dev/null || true
+bq mk --use_legacy_sql=false \
+    --view "
+SELECT
+  s.StoreID,
+  s.StoreName,
+  s.City,
+  s.Postcode,
+  s.Latitude,
+  s.Longitude,
+  ss.StockID,
+  ss.ProductNumber,
+  pm.ProductDescription,
+  pm.ProductCategory,
+  pm.ShelfLifeDays,
+  ss.StockDate,
+  ss.Quantity,
+  ss.DeliveryDate,
+  ss.ExpiryDate,
+  DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) AS DaysUntilExpiry,
+  ss.BatchNumber,
+  ss.StorageLocation
+FROM
+  \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\` AS ss
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.Stores\` AS s
+ON
+  ss.StoreID = s.StoreID
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
+ON
+  ss.ProductNumber = pm.ProductNumber
+WHERE
+  ss.StockDate = (
+    SELECT MAX(StockDate)
+    FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
+    WHERE StoreID = ss.StoreID AND ProductNumber = ss.ProductNumber
+  )
+ORDER BY
+  s.StoreName,
+  pm.ProductDescription,
+  ss.ExpiryDate
+" \
+    "${DATASET_ID}.store_stock_current"
+echo "  ✅ store_stock_current view created"
+echo ""
+
+# Step 8: Create view store_stock_expiring_soon
+echo "Step 8: Creating store_stock_expiring_soon view..."
+# Delete view if it exists, then create it
+bq rm -f "${DATASET_ID}.store_stock_expiring_soon" 2>/dev/null || true
+bq mk --use_legacy_sql=false \
+    --view "
+SELECT
+  s.StoreID,
+  s.StoreName,
+  s.City,
+  ss.ProductNumber,
+  pm.ProductDescription,
+  pm.ProductCategory,
+  ss.Quantity,
+  ss.ExpiryDate,
+  DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) AS DaysUntilExpiry,
+  ss.BatchNumber,
+  ss.StorageLocation,
+  CASE
+    WHEN DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) <= 0 THEN 'EXPIRED'
+    WHEN DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) <= 1 THEN 'CRITICAL'
+    WHEN DATE_DIFF(ss.ExpiryDate, CURRENT_DATE(), DAY) <= 2 THEN 'URGENT'
+    ELSE 'WARNING'
+  END AS ExpiryStatus
+FROM
+  \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\` AS ss
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.Stores\` AS s
+ON
+  ss.StoreID = s.StoreID
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
+ON
+  ss.ProductNumber = pm.ProductNumber
+WHERE
+  ss.StockDate = (
+    SELECT MAX(StockDate)
+    FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
+    WHERE StoreID = ss.StoreID AND ProductNumber = ss.ProductNumber
+  )
+  AND ss.ExpiryDate <= DATE_ADD(CURRENT_DATE(), INTERVAL 3 DAY)
+ORDER BY
+  ss.ExpiryDate,
+  s.StoreName,
+  pm.ProductDescription
+" \
+    "${DATASET_ID}.store_stock_expiring_soon"
+echo "  ✅ store_stock_expiring_soon view created"
+echo ""
+
+# Step 9: Create view distribution_stock_current
+echo "Step 9: Creating distribution_stock_current view..."
+# Delete view if it exists, then create it
+bq rm -f "${DATASET_ID}.distribution_stock_current" 2>/dev/null || true
+bq mk --use_legacy_sql=false \
+    --view "
+SELECT
+  df.FacilityID,
+  df.FacilityName,
+  df.City,
+  df.Postcode,
+  df.Latitude,
+  df.Longitude,
+  ds.StockID,
+  ds.ProductNumber,
+  pm.ProductDescription,
+  pm.ProductCategory,
+  pm.ShelfLifeDays,
+  ds.StockDate,
+  ds.Quantity,
+  ds.DeliveryDate,
+  ds.ExpiryDate,
+  DATE_DIFF(ds.ExpiryDate, CURRENT_DATE(), DAY) AS DaysUntilExpiry,
+  ds.BatchNumber,
+  ds.StorageLocation
+FROM
+  \`${PROJECT_ID}.${DATASET_NAME}.DistributionStock\` AS ds
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.DistributionFacilities\` AS df
+ON
+  ds.FacilityID = df.FacilityID
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
+ON
+  ds.ProductNumber = pm.ProductNumber
+WHERE
+  ds.StockDate = (
+    SELECT MAX(StockDate)
+    FROM \`${PROJECT_ID}.${DATASET_NAME}.DistributionStock\`
+    WHERE FacilityID = ds.FacilityID AND ProductNumber = ds.ProductNumber
+  )
+ORDER BY
+  df.FacilityName,
+  pm.ProductDescription,
+  ds.ExpiryDate
+" \
+    "${DATASET_ID}.distribution_stock_current"
+echo "  ✅ distribution_stock_current view created"
+echo ""
+
+# Step 10: Create view store_stock_summary
+echo "Step 10: Creating store_stock_summary view..."
+# Delete view if it exists, then create it
+bq rm -f "${DATASET_ID}.store_stock_summary" 2>/dev/null || true
+bq mk --use_legacy_sql=false \
+    --view "
+SELECT
+  s.StoreID,
+  s.StoreName,
+  s.City,
+  s.Latitude,
+  s.Longitude,
+  ss.ProductNumber,
+  pm.ProductDescription,
+  pm.ProductCategory,
+  SUM(ss.Quantity) AS TotalQuantity,
+  MIN(ss.ExpiryDate) AS EarliestExpiryDate,
+  MAX(ss.ExpiryDate) AS LatestExpiryDate,
+  COUNT(DISTINCT ss.BatchNumber) AS BatchCount,
+  AVG(ss.Quantity) AS AvgQuantityPerBatch
+FROM
+  \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\` AS ss
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.Stores\` AS s
+ON
+  ss.StoreID = s.StoreID
+JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.ProductMasterData\` AS pm
+ON
+  ss.ProductNumber = pm.ProductNumber
+WHERE
+  ss.StockDate = (
+    SELECT MAX(StockDate)
+    FROM \`${PROJECT_ID}.${DATASET_NAME}.StoreStock\`
+    WHERE StoreID = ss.StoreID AND ProductNumber = ss.ProductNumber
+  )
+GROUP BY
+  s.StoreID,
+  s.StoreName,
+  s.City,
+  s.Latitude,
+  s.Longitude,
+  ss.ProductNumber,
+  pm.ProductDescription,
+  pm.ProductCategory
+ORDER BY
+  s.StoreName,
+  pm.ProductDescription
+" \
+    "${DATASET_ID}.store_stock_summary"
+echo "  ✅ store_stock_summary view created"
+echo ""
+
+# Step 11: Create view store_proximity
+echo "Step 11: Creating store_proximity view..."
+# Delete view if it exists, then create it
+bq rm -f "${DATASET_ID}.store_proximity" 2>/dev/null || true
+bq mk --use_legacy_sql=false \
+    --view "
+SELECT
+  s1.StoreID AS StoreFromID,
+  s1.StoreName AS StoreFromName,
+  s1.City AS StoreFromCity,
+  s1.Latitude AS StoreFromLatitude,
+  s1.Longitude AS StoreFromLongitude,
+  s2.StoreID AS StoreToID,
+  s2.StoreName AS StoreToName,
+  s2.City AS StoreToCity,
+  s2.Latitude AS StoreToLatitude,
+  s2.Longitude AS StoreToLongitude,
+  ST_DISTANCE(
+    ST_GEOGPOINT(s1.Longitude, s1.Latitude),
+    ST_GEOGPOINT(s2.Longitude, s2.Latitude)
+  ) / 1000 AS DistanceKm,
+  CASE
+    WHEN s1.City = s2.City THEN 'Same City'
+    ELSE 'Different City'
+  END AS ProximityType
+FROM
+  \`${PROJECT_ID}.${DATASET_NAME}.Stores\` AS s1
+CROSS JOIN
+  \`${PROJECT_ID}.${DATASET_NAME}.Stores\` AS s2
+WHERE
+  s1.StoreID != s2.StoreID
+ORDER BY
+  DistanceKm
+" \
+    "${DATASET_ID}.store_proximity"
+echo "  ✅ store_proximity view created"
+echo ""
+
 echo "=========================================="
 echo "✅ Setup complete!"
 echo "=========================================="
@@ -274,10 +559,19 @@ echo "  - product_sales"
 echo "  - CustomerFeedback"
 echo "  - Recipes"
 echo "  - WasteTracking"
+echo "  - Stores"
+echo "  - DistributionFacilities"
+echo "  - StoreStock"
+echo "  - DistributionStock"
 echo "Views created:"
 echo "  - fda_chicken_enforcements"
 echo "  - actuals_vs_forecast (with AI forecast)"
 echo "  - products_with_recipes"
 echo "  - customer_feedback_with_products"
+echo "  - store_stock_current"
+echo "  - store_stock_expiring_soon"
+echo "  - distribution_stock_current"
+echo "  - store_stock_summary"
+echo "  - store_proximity"
 echo "=========================================="
 

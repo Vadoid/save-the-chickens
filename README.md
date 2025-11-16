@@ -9,6 +9,8 @@ AI agent for chicken product retail operations using Google's ADK. Provides natu
 - AI-powered 30-day sales forecasting using TimesFM
 - Waste tracking and expiration risk alerts
 - Recipe cost analysis and ingredient tracking
+- Multi-store inventory management with geolocation tracking
+- Stock movement planning between stores and distribution centers
 - FDA compliance monitoring
 
 **Setup:**
@@ -75,6 +77,9 @@ print(response["response"])
 - "What are the top 5 products by revenue this month?"
 - "Which products are approaching expiration?"
 - "Show me sales trends for chicken breasts"
+- "Show me stock of product 1001 in London Central as of today"
+- "Which items are expiring soon in store S001?"
+- "Plan stock movement from stores with excess stock to stores with low stock"
 
 **Waste Optimization:**
 - "What's our total waste cost this quarter?"
@@ -102,18 +107,143 @@ print(response["response"])
 
 ## Dataset Schema
 
-**Tables:**
+### Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    ProductMasterData ||--o{ product_sales : "has sales"
+    ProductMasterData ||--o{ StoreStock : "stocked in stores"
+    ProductMasterData ||--o{ DistributionStock : "stocked in facilities"
+    ProductMasterData ||--o{ WasteTracking : "wasted"
+    ProductMasterData ||--o{ Recipes : "has recipe"
+    ProductMasterData ||--o{ CustomerFeedback : "reviewed (fuzzy match)"
+    
+    Stores ||--o{ StoreStock : "has stock"
+    DistributionFacilities ||--o{ DistributionStock : "has stock"
+    
+    Stores {
+        string StoreID PK
+        string StoreName
+        string Address
+        string City
+        string Postcode
+        float Latitude
+        float Longitude
+        string StoreType
+        string PhoneNumber
+    }
+    
+    DistributionFacilities {
+        string FacilityID PK
+        string FacilityName
+        string Address
+        string City
+        string Postcode
+        float Latitude
+        float Longitude
+        string FacilityType
+        string PhoneNumber
+    }
+    
+    ProductMasterData {
+        string ProductNumber PK
+        string ProductDescription
+        string ProductCategory
+        int ShelfLifeDays
+        string StorageRequirements
+        string RecipeID FK
+    }
+    
+    StoreStock {
+        string StockID PK
+        string StoreID FK
+        string ProductNumber FK
+        date StockDate
+        int Quantity
+        date DeliveryDate
+        date ExpiryDate
+        string BatchNumber
+        string StorageLocation
+    }
+    
+    DistributionStock {
+        string StockID PK
+        string FacilityID FK
+        string ProductNumber FK
+        date StockDate
+        int Quantity
+        date DeliveryDate
+        date ExpiryDate
+        string BatchNumber
+        string StorageLocation
+    }
+    
+    product_sales {
+        string SaleID PK
+        timestamp SaleDate
+        date DeliveryDate
+        string ProductNumber FK
+        int SalesQuantity
+        float PricePerUnit
+        float TotalRevenue
+        date DueDate
+    }
+    
+    CustomerFeedback {
+        string CustomerName
+        string ProductName
+        date FeedbackDate
+        int Rating
+        string Description
+    }
+    
+    Recipes {
+        string RecipeID PK
+        string IngredientName
+        float IngredientQuantity
+        string Unit
+        string PreparationMethod
+        int IngredientShelfLifeDays
+    }
+    
+    WasteTracking {
+        string ProductID FK
+        date WasteDate
+        int Quantity
+        string Reason
+        float Cost
+    }
+```
+
+### Tables
+
+**Core Tables:**
 - `ProductMasterData`: Products (ProductNumber, Description, Category, ShelfLifeDays, RecipeID)
 - `product_sales`: Sales transactions (SaleID, SaleDate, ProductNumber, Quantity, Revenue)
 - `CustomerFeedback`: Reviews (CustomerName, ProductName, Rating, Description)
 - `Recipes`: Ingredients (RecipeID, IngredientName, Quantity, IngredientShelfLifeDays)
 - `WasteTracking`: Waste records (ProductID, WasteDate, Quantity, Reason, Cost)
 
-**Views:**
+**Location & Inventory Tables:**
+- `Stores`: Retail store locations (StoreID, StoreName, City, Postcode, Latitude, Longitude) - 25 stores across UK
+- `DistributionFacilities`: Distribution centers (FacilityID, FacilityName, City, Latitude, Longitude) - 3 facilities
+- `StoreStock`: Current inventory per store (StockID, StoreID, ProductNumber, Quantity, ExpiryDate, BatchNumber) - 275 records
+- `DistributionStock`: Inventory at distribution facilities (StockID, FacilityID, ProductNumber, Quantity, ExpiryDate) - 36 records
+
+### Views
+
+**Analytics Views:**
 - `actuals_vs_forecast`: Historical sales + AI-generated 30-day forecasts
 - `products_with_recipes`: Products joined with ingredients
 - `customer_feedback_with_products`: Reviews joined with products (fuzzy matched)
 - `fda_chicken_enforcements`: FDA actions for chicken products
+
+**Stock Management Views:**
+- `store_stock_current`: Current stock per store with product details and expiry tracking
+- `store_stock_expiring_soon`: Items expiring within 3 days with urgency categorization
+- `distribution_stock_current`: Current stock at distribution facilities
+- `store_stock_summary`: Aggregated stock summary per store/product
+- `store_proximity`: Distance calculations between all store pairs for stock movement planning
 
 ## Evaluation
 
