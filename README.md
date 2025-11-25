@@ -11,6 +11,23 @@ AI agent for chicken product retail operations using **Google's Agent Developmen
 
 > **Technical Details**: For a deep dive into the architecture, MCP implementation, and agent configuration, see [chickens_app/README.md](chickens_app/README.md).
 
+## Implementation Overview
+
+This project demonstrates a production-ready agent architecture:
+
+1.  **MCP-First Design**:
+    - The agent does not call BigQuery directly. It uses the **Model Context Protocol (MCP)** to communicate with a dedicated tools server.
+    - This decouples the "Reasoning Engine" (Agent) from the "Execution Engine" (Tools), allowing for safer, more modular deployments.
+
+2.  **Multi-Agent Collaboration (A2A)**:
+    - **Main Agent**: Handles data analysis, SQL generation, and operational logic.
+    - **Marketing Agent**: A specialized sub-agent for creative writing.
+    - The Main Agent delegates tasks to the Marketing Agent using the `consult_marketing_expert` tool, demonstrating how specialized agents can work together.
+
+3.  **Hybrid Tooling**:
+    - Combines **Database Tools** (BigQuery SQL) with **Real-time Tools** (IoT Mock) and **Utility Tools** (Google Maps Links).
+    - Shows how an agent can reason across static data and dynamic real-world states.
+
 ## Quick Start
 
 ### Prerequisites
