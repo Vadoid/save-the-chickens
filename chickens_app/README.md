@@ -8,12 +8,12 @@ The agent uses a **Model Context Protocol (MCP)** architecture to decouple the L
 
 ```mermaid
 graph TD
-    User[User] <--> WebUI[ADK Web UI]
-    WebUI <--> Agent[ADK Agent (agent.py)]
-    Agent <-->|Async Calls| Client[MCP Client (mcp_client.py)]
-    Client <-->|Stdio| Server[MCP Server Process (mcp_server.py)]
-    Server <-->|SQL| BQ[(BigQuery)]
-    Server <-->|Mock| IoT[IoT Fridge Sensor]
+    User[User] <--> WebUI["ADK Web UI"]
+    WebUI <--> Agent["ADK Agent (agent.py)"]
+    Agent <-->|Async Calls| Client["MCP Client (mcp_client.py)"]
+    Client <-->|Stdio| Server["MCP Server Process (mcp_server.py)"]
+    Server <-->|SQL| BQ[("BigQuery")]
+    Server <-->|Mock| IoT["IoT Fridge Sensor"]
 ```
 
 ## Components
