@@ -2,6 +2,8 @@
 
 This is a specialized sub-agent designed to generate creative social media content for the "Save the Chickens" retail chain.
 
+> **Note**: This is a sub-component. For the main project documentation, see [../README.md](../README.md).
+
 ## Role
 The **Marketing Agent** acts as the "Right Brain" to the main agent's "Left Brain". It takes dry data (stock levels, expiry dates) and turns it into engaging, witty, and urgent marketing copy.
 
