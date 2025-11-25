@@ -54,14 +54,20 @@ This project demonstrates a production-ready agent architecture:
     EOF
     ```
 
-3.  **Install Dependencies**
+3.  **Deploy Sample Data**
+    ```bash
+    # Run this OUTSIDE of any virtual environment
+    ./bigquery_source_data/setup_bigquery.sh
+    ```
+
+4.  **Install Dependencies**
     ```bash
     python -m venv .adkvenv
     source .adkvenv/bin/activate
     pip install -r requirements.txt
     ```
 
-4.  **Run the Agent**
+5.  **Run the Agent**
     ```bash
     ./start_web.sh
     ```
