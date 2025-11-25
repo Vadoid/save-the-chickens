@@ -1,5 +1,6 @@
 /.adkvenv
 /__pycache__
+/chickens_app/__pycache__
 /eval_results
 /.env
 /bigquery_agent_app/__pycache__/
