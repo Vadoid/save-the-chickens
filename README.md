@@ -1,13 +1,13 @@
-# Save the Chickens - BigQuery ADK Agent
+# Save the Chickens - Retail Operations AI Agent (ADK + MCP + A2A)
 
-AI agent for chicken product retail operations using **Google's Agent Development Kit (ADK)** and **Model Context Protocol (MCP)**.
+A production-ready reference implementation of an autonomous retail agent built with **Google's Agent Development Kit (ADK)**. Features **Model Context Protocol (MCP)** for secure tool integration (BigQuery, IoT) and **Agent-to-Agent (A2A)** collaboration for creative workflows.
 
 **What it does:**
-- 📊 **Natural Language BI**: Query sales, inventory, and waste data using plain English.
-- ❄️ **IoT Integration**: Check real-time freezer temperatures (Mock).
-- 🤝 **Agent-to-Agent (A2A)**: Delegates creative tasks to a specialized Marketing Agent.
-- 🤖 **Agentic Workflow**: Uses Gemini 2.5 Flash to reason across multiple data sources.
-- 🛠️ **Modular Architecture**: Built on MCP for easy extensibility.
+- **Natural Language BI**: Query sales, inventory, and waste data using plain English.
+- **IoT Integration**: Check real-time freezer temperatures (Mock).
+- **Agent-to-Agent (A2A)**: Delegates creative tasks to a specialized Marketing Agent.
+- **Agentic Workflow**: Uses Gemini 2.5 Flash to reason across multiple data sources.
+- **Modular Architecture**: Built on MCP for easy extensibility.
 
 > **Technical Details**: For a deep dive into the architecture, MCP implementation, and agent configuration, see [chickens_app/README.md](chickens_app/README.md).
 
