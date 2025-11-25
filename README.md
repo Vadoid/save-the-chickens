@@ -60,6 +60,9 @@ AI agent for chicken product retail operations using **Google's Agent Developmen
 - "Check the freezer temperatures for store S001."
 - "Find stores with low stock AND broken freezers."
 
+**Marketing (A2A Demo):**
+- "Find expiring chicken breasts and write a tweet to sell them."
+
 **Waste Optimization:**
 - "Which products are expiring soon?"
 - "Recommend discount strategies for expiring items."
