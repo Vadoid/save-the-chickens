@@ -43,7 +43,6 @@ async def consult_marketing_expert(context: str, goal: str) -> str:
     response_text = "No response from marketing expert."
     
     try:
-    try:
         # Collect all events first to ensure the generator is fully consumed
         # This prevents OpenTelemetry context errors when the generator is garbage collected prematurely
         events = []
