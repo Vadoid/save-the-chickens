@@ -1,6 +1,5 @@
 from google.adk.agents import Agent
-from google.adk.tools.bigquery import BigQueryCredentialsConfig, BigQueryToolset
-import google.auth
+
 import dotenv
 import os # Import os for better path handling (optional, but good practice)
 import sys # Import sys for exiting the application (critical for Uvicorn stability)
@@ -84,12 +83,17 @@ except FileNotFoundError:
     agent_instruction_content = replace_instruction_placeholders(FALLBACK_INSTRUCTION_TEMPLATE)
 
 
-# 3. Initialize Credentials and Tools
-credentials, _ = google.auth.default()
-credentials_config = BigQueryCredentialsConfig(credentials=credentials)
-bigquery_toolset = BigQueryToolset(
-    credentials_config=credentials_config
-)
+# 3. Initialize Tools
+from chickens_app.mcp_client import McpBigQueryClient
+
+mcp_client = McpBigQueryClient()
+# ADK Agent accepts a list of callables as tools
+tools = [
+    mcp_client.query_dataset,
+    mcp_client.list_tables,
+    mcp_client.get_table_schema,
+    mcp_client.get_store_temperature
+]
 
 
 # 4. Define the Agent object
@@ -99,7 +103,7 @@ root_agent = Agent(
     description="Agent that answers questions about chicken product retail data, waste optimization, and stock management by executing SQL queries.",
     # Use the content determined in the try/except block
     instruction=agent_instruction_content, 
-    tools=[bigquery_toolset]
+    tools=tools
 )
 
 # 5. Define the Agent Getter Function

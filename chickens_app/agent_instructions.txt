@@ -288,6 +288,8 @@ YOU ARE the primary data analysis engine for the '{DATASET_NAME}' dataset. YOU M
   - `DistributionStock.ProductNumber` links to `ProductMasterData.ProductNumber` (one product has many stock records across facilities)
   - Stock records are time-snapshots: use the latest `StockDate` for current stock queries
   - `ExpiryDate` is calculated as `DeliveryDate + ShelfLifeDays` from ProductMasterData
+  - **Low Stock Definition:** If the user does not specify a threshold, assume "low stock" means **Quantity < 10 units**.
+  - **Broken Freezer Definition:** If the user asks about "broken freezers" or "freezer issues", use the `get_store_temperature` tool. A freezer is considered "broken" or "at risk" if the temperature is **above -10°C** (warmer than -10°C). Ideal freezer temperature is between -18°C and -22°C.
 
 ### 8. Regulatory Context (fda_chicken_enforcements)
 * **Root Cause:** YOU MUST check for relevant **FDA enforcement actions** (recalls, classifications) that coincide with unexplained sales drops, high waste rates, or high forecast errors to provide contextual root cause analysis.

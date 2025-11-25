@@ -1,286 +1,83 @@
 # Save the Chickens - BigQuery ADK Agent
 
-AI agent for chicken product retail operations using Google's ADK. Provides natural language querying, waste optimization, inventory management, and sales forecasting.
+AI agent for chicken product retail operations using **Google's Agent Development Kit (ADK)** and **Model Context Protocol (MCP)**.
+
+**What it does:**
+- 📊 **Natural Language BI**: Query sales, inventory, and waste data using plain English.
+- ❄️ **IoT Integration**: Check real-time freezer temperatures (Mock).
+- 🤖 **Agentic Workflow**: Uses Gemini 2.5 Flash to reason across multiple data sources.
+- 🛠️ **Modular Architecture**: Built on MCP for easy extensibility.
+
+> **Technical Details**: For a deep dive into the architecture, MCP implementation, and agent configuration, see [chickens_app/README.md](chickens_app/README.md).
 
 ## Quick Start
 
-**What it does:**
-- Natural language queries on BigQuery data (sales, inventory, waste, recipes, customer feedback)
-- AI-powered 30-day sales forecasting using TimesFM
-- Waste tracking and expiration risk alerts
-- Recipe cost analysis and ingredient tracking
-- Multi-store inventory management with geolocation tracking
-- Stock movement planning between stores and distribution centers
-- FDA compliance monitoring
+### Prerequisites
+- Python 3.10+
+- Google Cloud Project with BigQuery enabled
+- Vertex AI API enabled
 
-**Setup:**
-```bash
-# 1. Authenticate (run BEFORE creating venv)
-gcloud auth application-default login
-gcloud config set project <your_project>
+### Setup
 
-# 2. Create .env file
-cat > .env << EOF
-GOOGLE_GENAI_USE_VERTEXAI=1
-GOOGLE_CLOUD_PROJECT=<your_project>
-GOOGLE_CLOUD_LOCATION=us-central1
-BIGQUERY_DATASET=save_the_chickens
-EOF
+1.  **Authenticate**
+    ```bash
+    gcloud auth application-default login
+    gcloud config set project <your_project>
+    ```
 
-# 3. Setup BigQuery (optional - for sample data)
-cd bigquery_source_data && ./setup_bigquery.sh && cd ..
+2.  **Configure Environment**
+    Create a `.env` file:
+    ```bash
+    cat > .env << EOF
+    GOOGLE_GENAI_USE_VERTEXAI=1
+    GOOGLE_CLOUD_PROJECT=<your_project>
+    GOOGLE_CLOUD_LOCATION=us-central1
+    BIGQUERY_DATASET=save_the_chickens
+    EOF
+    ```
 
-# 4. Install and run
-python -m venv .adkvenv
-source .adkvenv/bin/activate
-pip install -r requirements.txt
-./start_web.sh
-```
+3.  **Install Dependencies**
+    ```bash
+    python -m venv .adkvenv
+    source .adkvenv/bin/activate
+    pip install -r requirements.txt
+    ```
 
-## Configuration
+4.  **Run the Agent**
+    ```bash
+    ./start_web.sh
+    ```
+    This opens the Web UI at `http://localhost:8000/dev-ui/?app=chickens_app`.
 
-**Required `.env` variables:**
-```bash
-GOOGLE_GENAI_USE_VERTEXAI=1          # Use Vertex AI
-GOOGLE_CLOUD_PROJECT=<project_id>    # Your GCP project
-GOOGLE_CLOUD_LOCATION=us-central1    # Vertex AI location
-BIGQUERY_DATASET=save_the_chickens   # Optional, defaults to save_the_chickens
-ADK_LOG_LEVEL=WARNING                # Optional, reduces verbosity
-```
-
-**Agent settings:**
-- Model: `gemini-2.5-flash` (edit in `chickens_app/agent.py`)
-- Project/Dataset: Auto-injected from `.env` at runtime
-
-## Usage
-
-**Web UI (recommended):**
-```bash
-./start_web.sh  # Opens http://localhost:8000/dev-ui/?app=chickens_app
-```
-
-**CLI:**
-```bash
-adk run chickens_app
-```
-
-**Programmatic:**
-```python
-from utils import get_agent_response
-response = get_agent_response("What products are at risk of expiration?")
-print(response["response"])
-```
-
-## Use Cases
+## Example Queries
 
 **Sales & Inventory:**
 - "What are the top 5 products by revenue this month?"
-- "Which products are approaching expiration?"
-- "Show me sales trends for chicken breasts"
-- "Show me stock of product 1001 in London Central as of today"
-- "Which items are expiring soon in store S001?"
-- "Plan stock movement from stores with excess stock to stores with low stock"
+- "Which stores have low stock of Chicken Breasts?"
+
+**Operations (MCP Demo):**
+- "Check the freezer temperatures for store S001."
+- "Find stores with low stock AND broken freezers."
 
 **Waste Optimization:**
-- "What's our total waste cost this quarter?"
-- "Which products have the highest waste rates?"
-- "Recommend discount strategies for products expiring soon"
-
-**Customer Analysis:**
-- "What products have the worst customer ratings?"
-- "Show me feedback for whole roasted chicken"
-- "Which high-revenue products have poor reviews?"
-
-**Recipe & Ingredients:**
-- "What ingredients are in product 1001?"
-- "Which ingredients are used across multiple products?"
-- "What's the shelf life of ingredients in chicken pot pie?"
-
-**Forecasting:**
-- "Compare actual vs forecasted sales for last month"
-- "What's the forecast accuracy for product 1002?"
-- "Show me products with volatile forecast errors"
-
-**Compliance:**
-- "Are there any FDA recalls for chicken products?"
-- "Check for regulatory actions affecting our sales"
-
-## Dataset Schema
-
-### Entity-Relationship Diagram
-
-```mermaid
-erDiagram
-    ProductMasterData ||--o{ product_sales : "has sales"
-    ProductMasterData ||--o{ StoreStock : "stocked in stores"
-    ProductMasterData ||--o{ DistributionStock : "stocked in facilities"
-    ProductMasterData ||--o{ WasteTracking : "wasted"
-    ProductMasterData ||--o{ Recipes : "has recipe"
-    ProductMasterData ||--o{ CustomerFeedback : "reviewed (fuzzy match)"
-    
-    Stores ||--o{ StoreStock : "has stock"
-    DistributionFacilities ||--o{ DistributionStock : "has stock"
-    
-    Stores {
-        string StoreID PK
-        string StoreName
-        string Address
-        string City
-        string Postcode
-        float Latitude
-        float Longitude
-        string StoreType
-        string PhoneNumber
-    }
-    
-    DistributionFacilities {
-        string FacilityID PK
-        string FacilityName
-        string Address
-        string City
-        string Postcode
-        float Latitude
-        float Longitude
-        string FacilityType
-        string PhoneNumber
-    }
-    
-    ProductMasterData {
-        string ProductNumber PK
-        string ProductDescription
-        string ProductCategory
-        int ShelfLifeDays
-        string StorageRequirements
-        string RecipeID FK
-    }
-    
-    StoreStock {
-        string StockID PK
-        string StoreID FK
-        string ProductNumber FK
-        date StockDate
-        int Quantity
-        date DeliveryDate
-        date ExpiryDate
-        string BatchNumber
-        string StorageLocation
-    }
-    
-    DistributionStock {
-        string StockID PK
-        string FacilityID FK
-        string ProductNumber FK
-        date StockDate
-        int Quantity
-        date DeliveryDate
-        date ExpiryDate
-        string BatchNumber
-        string StorageLocation
-    }
-    
-    product_sales {
-        string SaleID PK
-        timestamp SaleDate
-        date DeliveryDate
-        string ProductNumber FK
-        int SalesQuantity
-        float PricePerUnit
-        float TotalRevenue
-        date DueDate
-    }
-    
-    CustomerFeedback {
-        string CustomerName
-        string ProductName
-        date FeedbackDate
-        int Rating
-        string Description
-    }
-    
-    Recipes {
-        string RecipeID PK
-        string IngredientName
-        float IngredientQuantity
-        string Unit
-        string PreparationMethod
-        int IngredientShelfLifeDays
-    }
-    
-    WasteTracking {
-        string ProductID FK
-        date WasteDate
-        int Quantity
-        string Reason
-        float Cost
-    }
-```
-
-### Tables
-
-**Core Tables:**
-- `ProductMasterData`: Products (ProductNumber, Description, Category, ShelfLifeDays, RecipeID)
-- `product_sales`: Sales transactions (SaleID, SaleDate, ProductNumber, Quantity, Revenue)
-- `CustomerFeedback`: Reviews (CustomerName, ProductName, Rating, Description)
-- `Recipes`: Ingredients (RecipeID, IngredientName, Quantity, IngredientShelfLifeDays)
-- `WasteTracking`: Waste records (ProductID, WasteDate, Quantity, Reason, Cost)
-
-**Location & Inventory Tables:**
-- `Stores`: Retail store locations (StoreID, StoreName, City, Postcode, Latitude, Longitude) - 25 stores across UK
-- `DistributionFacilities`: Distribution centers (FacilityID, FacilityName, City, Latitude, Longitude) - 3 facilities
-- `StoreStock`: Current inventory per store (StockID, StoreID, ProductNumber, Quantity, ExpiryDate, BatchNumber) - 275 records
-- `DistributionStock`: Inventory at distribution facilities (StockID, FacilityID, ProductNumber, Quantity, ExpiryDate) - 36 records
-
-### Views
-
-**Analytics Views:**
-- `actuals_vs_forecast`: Historical sales + AI-generated 30-day forecasts
-- `products_with_recipes`: Products joined with ingredients
-- `customer_feedback_with_products`: Reviews joined with products (fuzzy matched)
-- `fda_chicken_enforcements`: FDA actions for chicken products
-
-**Stock Management Views:**
-- `store_stock_current`: Current stock per store with product details and expiry tracking
-- `store_stock_expiring_soon`: Items expiring within 3 days with urgency categorization
-- `distribution_stock_current`: Current stock at distribution facilities
-- `store_stock_summary`: Aggregated stock summary per store/product
-- `store_proximity`: Distance calculations between all store pairs for stock movement planning
-
-## Evaluation
-
-```bash
-python evaluate_agent.py
-```
-
-Tests agent on `evaluation_dataset.json`, measures factual accuracy and completeness.
+- "Which products are expiring soon?"
+- "Recommend discount strategies for expiring items."
 
 ## Project Structure
 
 ```
 save-the-chickens/
-├── chickens_app/
-│   ├── agent.py              # Agent config
-│   └── agent_instructions.txt # Analysis protocols
-├── bigquery_source_data/     # CSV files + setup script
-├── run_agent.py             # Agent runner
-├── evaluate_agent.py        # Evaluation framework
-└── start_web.sh             # Web UI launcher
+├── chickens_app/             # Agent Source Code
+│   ├── agent.py             # Agent Configuration
+│   ├── mcp_client.py        # MCP Client Adapter
+│   ├── mcp_server.py        # MCP Server (BigQuery + IoT)
+│   ├── agent_instructions.txt # System Prompt
+│   └── README.md            # Technical Documentation
+├── bigquery_source_data/     # Sample Data & Setup Scripts
+├── run_agent.py             # CLI Runner
+├── evaluate_agent.py        # Evaluation Script
+└── start_web.sh             # Web UI Launcher
 ```
-
-## Troubleshooting
-
-**Authentication:**
-- Run `gcloud auth application-default login` (outside venv)
-- Verify `.env` has correct `GOOGLE_CLOUD_PROJECT`
-- Ensure account has BigQuery Data Viewer and Job User roles
-
-**Import errors:**
-- Activate venv: `source .adkvenv/bin/activate`
-- Reinstall: `pip install -r requirements.txt`
-
-**Agent issues:**
-- Check `agent_instructions.txt` exists in `chickens_app/`
-- Verify Vertex AI API is enabled in GCP project
-- Check logs for specific error messages
 
 ## License
 
