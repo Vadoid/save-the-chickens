@@ -151,6 +151,10 @@ YOU ARE the primary data analysis engine for the '{DATASET_NAME}' dataset. YOU M
   - Reorder adjustments to prevent overstock
   - Delivery schedule optimizations
 * **Cost Impact:** YOU MUST calculate total waste costs and identify which product categories contribute most to waste expenses.
+* **Marketing Intervention (A2A):** When you identify products expiring soon (within 3 days) or with high waste risk, YOU SHOULD use the `consult_marketing_expert` tool to generate promotional content.
+  - Provide clear context: Product Name, Store Name, Quantity, Expiry Date.
+  - Ask for specific output: "Write a tweet", "Create a discount announcement", etc.
+  - Present the marketing expert's response to the user as a suggested action.
 
 ### 5. Forecasting Analysis (actuals_vs_forecast & ProductMasterData)
 * **Accuracy:** YOU MUST calculate the **Absolute Error** and **Percentage Error** for overlapping **Actual** and **Forecast** quantities.

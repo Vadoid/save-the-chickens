@@ -14,6 +14,7 @@ graph TD
     Client <-->|Stdio| Server["MCP Server Process (mcp_server.py)"]
     Server <-->|SQL| BQ[("BigQuery")]
     Server <-->|Mock| IoT["IoT Fridge Sensor"]
+    Agent <-->|A2A Call| Marketing["Marketing Agent (marketing_app)"]
 ```
 
 ## Components
@@ -22,7 +23,7 @@ graph TD
 - **Role**: The "Brain".
 - **Model**: `gemini-2.5-flash`.
 - **Configuration**: Loads environment variables and instructions.
-- **Tools**: Registers the MCP client methods as tools for the model to use.
+- **Tools**: Registers the MCP client methods and A2A tools.
 
 ### 2. MCP Client (`mcp_client.py`)
 - **Role**: The "Bridge".
@@ -45,6 +46,7 @@ graph TD
     - SQL generation (fuzzy matching, date handling).
     - Business logic (low stock definitions, waste analysis).
     - Output formatting (markdown tables).
+    - **Delegation**: When to call the Marketing Agent.
 
 ## Tools Description
 
@@ -54,6 +56,7 @@ graph TD
 | `list_tables` | Lists all tables in the `save_the_chickens` dataset. | BigQuery |
 | `get_table_schema` | Returns column names and types for a table. | BigQuery |
 | `get_store_temperature` | Returns current temperature and status for store freezers. | Mock IoT |
+| `consult_marketing_expert` | Delegates creative writing tasks to the Marketing Agent. | A2A (Marketing App) |
 
 ## Development
 

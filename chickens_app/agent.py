@@ -85,6 +85,7 @@ except FileNotFoundError:
 
 # 3. Initialize Tools
 from chickens_app.mcp_client import McpBigQueryClient
+from chickens_app.a2a_tools import consult_marketing_expert
 
 mcp_client = McpBigQueryClient()
 # ADK Agent accepts a list of callables as tools
@@ -92,7 +93,8 @@ tools = [
     mcp_client.query_dataset,
     mcp_client.list_tables,
     mcp_client.get_table_schema,
-    mcp_client.get_store_temperature
+    mcp_client.get_store_temperature,
+    consult_marketing_expert
 ]
 
 

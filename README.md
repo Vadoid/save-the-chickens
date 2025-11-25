@@ -5,6 +5,7 @@ AI agent for chicken product retail operations using **Google's Agent Developmen
 **What it does:**
 - 📊 **Natural Language BI**: Query sales, inventory, and waste data using plain English.
 - ❄️ **IoT Integration**: Check real-time freezer temperatures (Mock).
+- 🤝 **Agent-to-Agent (A2A)**: Delegates creative tasks to a specialized Marketing Agent.
 - 🤖 **Agentic Workflow**: Uses Gemini 2.5 Flash to reason across multiple data sources.
 - 🛠️ **Modular Architecture**: Built on MCP for easy extensibility.
 
