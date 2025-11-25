@@ -4,3 +4,4 @@
 /eval_results
 /.env
 /bigquery_agent_app/__pycache__/
+.DS_Store
