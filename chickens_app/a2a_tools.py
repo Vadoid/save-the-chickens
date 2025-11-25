@@ -43,14 +43,30 @@ async def consult_marketing_expert(context: str, goal: str) -> str:
     response_text = "No response from marketing expert."
     
     try:
+    try:
+        # Collect all events first to ensure the generator is fully consumed
+        # This prevents OpenTelemetry context errors when the generator is garbage collected prematurely
+        events = []
         async for event in runner.run_async(
             user_id="system_delegation",
             session_id=session_id,
             new_message=types.Content(role="user", parts=[types.Part(text=prompt)])
         ):
+            events.append(event)
+            
+        # Process the final response from the collected events
+        for event in events:
             if event.is_final_response() and event.content and event.content.parts:
                 response_text = event.content.parts[0].text
                 break
+                
+        # Generate Twitter Intent URL
+        import urllib.parse
+        encoded_text = urllib.parse.quote(response_text)
+        twitter_url = f"https://twitter.com/intent/tweet?text={encoded_text}"
+        
+        response_text += f"\n\n[🐦 Post to Twitter]({twitter_url})"
+        
     except Exception as e:
         response_text = f"Error consulting marketing expert: {str(e)}"
         
