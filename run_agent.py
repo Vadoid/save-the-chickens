@@ -1,4 +1,4 @@
-from chickens_app.agent import get_chickens_agent
+from chickens_app.agent import get_chickens_agent, bq_logging_plugin
 from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
 from google.genai import types
@@ -13,10 +13,11 @@ async def run_conversation(prompt: str):
 
    session_service = InMemorySessionService()
    session_id = f"{APP_NAME}-{uuid.uuid4().hex[:8]}"
-   root_agent = get_chickens_agent()
+   # get_chickens_agent now returns an App object with plugins configured
+   app = get_chickens_agent()
 
    runner = Runner(
-       agent=root_agent, app_name=APP_NAME, session_service=session_service
+       app=app, session_service=session_service
    )
    session = await session_service.create_session(
        app_name=APP_NAME, user_id=USER_ID, session_id=session_id

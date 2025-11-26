@@ -16,7 +16,7 @@ class McpBigQueryClient:
     
     async def _run_tool(self, tool_name: str, arguments: dict) -> str:
         server_params = StdioServerParameters(
-            command="python",
+            command=sys.executable,
             args=[SERVER_SCRIPT],
             env=os.environ.copy()
         )

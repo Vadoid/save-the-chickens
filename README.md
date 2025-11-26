@@ -302,6 +302,14 @@ save-the-chickens/
 └── start_web.sh             # Web UI Launcher
 ```
 
+## BigQuery Logging
+
+The agent automatically logs all events (LLM requests, tool calls, responses) to a BigQuery table for auditing and analytics.
+
+**Table:** `agent_events` (in your configured dataset)
+
+For more details on the schema and analysis queries, see the [BigQuery Agent Analytics Plugin documentation](https://google.github.io/adk-docs/tools/google-cloud/bigquery-agent-analytics).
+
 ## Troubleshooting
 
 **Authentication:**
@@ -318,6 +326,9 @@ save-the-chickens/
 - Verify Vertex AI API is enabled in GCP project
 - Check logs for specific error messages
 
+
+
 ## License
+
 
 Apache License 2.0

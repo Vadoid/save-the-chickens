@@ -1,4 +1,5 @@
 from google.adk.agents import Agent
+from google.adk.plugins.bigquery_agent_analytics_plugin import BigQueryAgentAnalyticsPlugin
 
 import dotenv
 import os # Import os for better path handling (optional, but good practice)
@@ -52,7 +53,7 @@ Note: Your detailed analysis protocol file was not found. Please operate based o
 
 
 # 1. Define the path to your instructions file
-INSTRUCTION_FILE_PATH = "agent_instructions.txt"
+INSTRUCTION_FILE_PATH = Path(__file__).parent / "agent_instructions.txt"
 
 # 2. Load the instructions from the file with improved error handling
 try:
@@ -98,6 +99,13 @@ tools = [
 ]
 
 
+# --- Initialize the Plugin ---
+bq_logging_plugin = BigQueryAgentAnalyticsPlugin(
+    project_id=GOOGLE_CLOUD_PROJECT, # project_id is required input from user
+    dataset_id=BIGQUERY_DATASET, # dataset_id is required input from user
+    table_id="agent_events" # Optional: defaults to "agent_events". The plugin automatically creates this table if it doesn't exist.
+)
+
 # 4. Define the Agent object
 root_agent = Agent(
     model="gemini-2.5-flash",
@@ -108,6 +116,18 @@ root_agent = Agent(
     tools=tools
 )
 
+
+
 # 5. Define the Agent Getter Function
+# 5. Define the App object
+from google.adk.apps import App
+
+app = App(
+    name="chickens_app",
+    root_agent=root_agent,
+    plugins=[bq_logging_plugin]
+)
+
+# 6. Define the Agent Getter Function
 def get_chickens_agent():
-    return root_agent
+    return app
