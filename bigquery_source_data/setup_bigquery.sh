@@ -199,11 +199,12 @@ WITH
   sales_data AS (
     SELECT 
       EXTRACT(DATE FROM SaleDate) AS date, 
+      StoreID,
       ProductNumber, 
       SUM(SalesQuantity) AS sales_quantity
     FROM 
       \`${PROJECT_ID}.${DATASET_NAME}.product_sales\`
-    GROUP BY date, ProductNumber
+    GROUP BY date, StoreID, ProductNumber
   ),
   forecast_data AS (
     SELECT *
@@ -212,12 +213,13 @@ WITH
         TABLE sales_data,
         data_col => 'sales_quantity',
         timestamp_col => 'date',
-        id_cols => ['ProductNumber'],
+        id_cols => ['StoreID', 'ProductNumber'],
         horizon => 30
       )
   )
 SELECT
   t1.SaleDate AS event_timestamp,
+  t1.StoreID,
   t1.ProductNumber,
   SUM(t1.SalesQuantity) AS quantity_value,
   NULL AS confidence_level,
@@ -227,10 +229,11 @@ SELECT
   'Actual' AS data_type
 FROM
   \`${PROJECT_ID}.${DATASET_NAME}.product_sales\` AS t1
-GROUP BY t1.SaleDate, t1.ProductNumber
+GROUP BY t1.SaleDate, t1.StoreID, t1.ProductNumber
 UNION ALL
 SELECT
   t2.forecast_timestamp AS event_timestamp,
+  t2.StoreID,
   t2.ProductNumber,
   CAST(t2.forecast_value AS INT64) AS quantity_value,
   t2.confidence_level,
