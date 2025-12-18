@@ -95,14 +95,10 @@ graph TD
     MODEL_NAME=gemini-3-flash-preview  # Optional: Defaults to gemini-2.5-flash if not set
     ```
 
-2.  **Start Marketing Server**:
+2.  **Start Application**:
+    This script will launch the Marketing Agent Server (background) and the Chickens Agent Web UI.
     ```bash
-    ./.adkvenv/bin/python -m marketing_app.server
-    ```
-
-3.  **Run Chickens Agent**:
-    ```bash
-    ./.adkvenv/bin/python -m chickens_app.run_agent
+    ./start_web.sh
     ```
 
 ## Development
