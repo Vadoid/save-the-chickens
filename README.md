@@ -1,3 +1,5 @@
+<img src="img/logo.png" alt="Save the Chickens Logo" width="200" align="right"/>
+
 # Save the Chickens 🐔
 
 A sample application demonstrating an **Agentic Workflow** using **MCP (Model Context Protocol)** and **A2A (Agent-to-Agent)** communication.
@@ -110,6 +112,8 @@ graph TD
 
 ## Patched SDK
 This project uses a locally patched version of the `a2a-python` SDK located in `.a2a_source`.
--   **Reason**: Fixes critical issues with `MessageSendParams` deserialization and `SendMessageResponse` validation.
--   **Usage**: The `marketing_app/server.py` script automatically adds this directory to the Python path.
--   **Note**: This directory is git-ignored by default to keep the repo clean, but acts as a vendored dependency for this deployment.
+-   **Reason**: The upstream `a2a-python` SDK currently has two critical issues that prevent it from working in this environment:
+    1.  **Strict Type Validation**: The SDK's `prepare_response_object` uses rigid `isinstance` checks that fail even when valid data is returned (e.g., rejecting a `SendMessageResponse` because it expects a `Message`).
+    2.  **Request Deserialization**: The JSON-RPC handler expects a strict nesting structure for `params` that conflicts with how Starlette/FastAPI sometimes unwraps requests, causing `AttributeError`.
+-   **Usage**: The `marketing_app/server.py` script automatically adds this directory to the Python path (`sys.path.insert(0, ...)`).
+-   **Note**: We have explicitly un-ignored this directory in `.gitignore` so that these critical patches are committed to the repository and available to all users. Cloning the official SDK would break the application.
