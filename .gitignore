@@ -6,5 +6,4 @@
 /bigquery_agent_app/__pycache__/
 .DS_Store
 /.venv
-
 *.log
