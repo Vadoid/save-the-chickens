@@ -39,6 +39,7 @@ This project demonstrates a production-ready agent architecture:
 
 ### Prerequisites
 - Python 3.10+
+- Google Cloud SDK (latest version recommended: `gcloud components update`)
 - Google Cloud Project with BigQuery enabled
 - Vertex AI API enabled
 
@@ -61,6 +62,7 @@ This project demonstrates a production-ready agent architecture:
     GOOGLE_CLOUD_LOCATION=us-central1
     BIGQUERY_DATASET=save_the_chickens
     MAPS_API_KEY=<your_maps_api_key>
+    ADK_LOG_LEVEL=WARNING
     EOF
     ```
 
@@ -84,16 +86,6 @@ This project demonstrates a production-ready agent architecture:
     This opens the Web UI at `http://localhost:8000/dev-ui/?app=chickens_app`.
 
 ## Configuration
-
-**Required `.env` variables:**
-```bash
-GOOGLE_GENAI_USE_VERTEXAI=1          # Use Vertex AI
-GOOGLE_CLOUD_PROJECT=<project_id>    # Your GCP project
-GOOGLE_CLOUD_LOCATION=us-central1    # Vertex AI location
-BIGQUERY_DATASET=save_the_chickens   # Optional, defaults to save_the_chickens
-MAPS_API_KEY=<your_api_key>          # Required for Maps tools
-ADK_LOG_LEVEL=WARNING                # Optional, reduces verbosity
-```
 
 **Agent settings:**
 - Model: `gemini-2.5-flash` (edit in `chickens_app/agent.py`)
