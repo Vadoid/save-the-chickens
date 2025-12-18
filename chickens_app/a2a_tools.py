@@ -19,17 +19,23 @@ async def consult_marketing_expert(context: str, goal: str) -> str:
     print(f"📞 Calling Marketing Agent... Context: {context[:50]}...")
     
     # Initialize the marketing agent
+    # We load the agent definition from the marketing_app module
     agent = get_marketing_agent()
+    
+    # Create a fresh session for this interaction
+    # Using InMemorySessionService is sufficient for this stateless delegation
     session_service = InMemorySessionService()
     session_id = f"marketing-{uuid.uuid4().hex[:8]}"
     
+    # Initialize the Runner
+    # The Runner orchestrates the agent's execution loop
     runner = Runner(
         agent=agent,
         app_name="marketing_app",
         session_service=session_service
     )
     
-    # Create session
+    # Create the session in the service
     await session_service.create_session(
         app_name="marketing_app",
         user_id="system_delegation",
@@ -37,14 +43,17 @@ async def consult_marketing_expert(context: str, goal: str) -> str:
     )
     
     # Construct the prompt
+    # We wrap the context and goal into a structured prompt for the sub-agent
     prompt = f"Context: {context}\nGoal: {goal}"
     
     # Run the agent
     response_text = "No response from marketing expert."
     
     try:
-        # Collect all events first to ensure the generator is fully consumed
-        # This prevents OpenTelemetry context errors when the generator is garbage collected prematurely
+        # Collect all events first to ensure the generator is fully consumed.
+        # This is a critical pattern: if we break the loop early or don't consume
+        # the generator, it can lead to "RuntimeError: generator ignored GeneratorExit"
+        # or OpenTelemetry context leaks.
         events = []
         async for event in runner.run_async(
             user_id="system_delegation",
@@ -54,6 +63,7 @@ async def consult_marketing_expert(context: str, goal: str) -> str:
             events.append(event)
             
         # Process the final response from the collected events
+        # We look for the last event that contains a final response text
         for event in events:
             if event.is_final_response() and event.content and event.content.parts:
                 response_text = event.content.parts[0].text

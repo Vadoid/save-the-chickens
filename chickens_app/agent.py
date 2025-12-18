@@ -1,6 +1,39 @@
 from google.adk.agents import Agent
 from google.adk.plugins.bigquery_agent_analytics_plugin import BigQueryAgentAnalyticsPlugin
 
+import logging
+import os
+from mcp.client.session import ClientSession
+
+# --- Monkey Patch Start ---
+# PROBLEM: The BigQuery MCP server currently returns a "400 Bad Request" error when the client 
+# attempts to call `resources/list` and `prompts/list` during initialization.
+# This causes the ADK agent to crash before it can even list the available tools.
+#
+# SOLUTION: We monkey-patch the `ClientSession` methods to intercept these specific calls.
+# Instead of sending a request to the server, we immediately return an empty result.
+# This allows the initialization to proceed to `tools/list`, which IS supported.
+print("🔧 Applying MCP ClientSession monkey patch...")
+async def mock_list_resources(self, *args, **kwargs):
+    print("⚠️ Monkey-patched list_resources called - bypassing unsupported server endpoint")
+    class ResourceResult:
+        resources = []
+        nextCursor = None
+    return ResourceResult()
+
+async def mock_list_prompts(self, *args, **kwargs):
+    print("⚠️ Monkey-patched list_prompts called - bypassing unsupported server endpoint")
+    class PromptResult:
+        prompts = []
+        nextCursor = None
+    return PromptResult()
+
+# Apply the patches to the class definition
+ClientSession.list_resources = mock_list_resources
+ClientSession.list_prompts = mock_list_prompts
+print("✅ MCP ClientSession monkey patch applied.")
+# --- Monkey Patch End ---
+
 import dotenv
 import os # Import os for better path handling (optional, but good practice)
 import sys # Import sys for exiting the application (critical for Uvicorn stability)
@@ -73,6 +106,12 @@ try:
             
             """
             + comprehensive_instructions
+            + """
+            
+            # Maps Integration
+            You also have access to Maps tools. Use these for real-world location analysis, finding competition/places and calculating necessary travel routes.
+            Include a hyperlink to an interactive map in your response where appropriate.
+            """
         )
         # Replace placeholders with actual values from environment
         agent_instruction_content = replace_instruction_placeholders(agent_instruction_content_template)
@@ -85,21 +124,27 @@ except FileNotFoundError:
 
 
 # 3. Initialize Tools
-from chickens_app.mcp_client import McpBigQueryClient
+from chickens_app import mcp_server
 from chickens_app.a2a_tools import consult_marketing_expert
 
-mcp_client = McpBigQueryClient()
+maps_toolset = mcp_server.get_maps_mcp_toolset()
+bigquery_toolset = mcp_server.get_bigquery_mcp_toolset()
+
 # ADK Agent accepts a list of callables as tools
-tools = [
-    mcp_client.query_dataset,
-    mcp_client.list_tables,
-    mcp_client.get_table_schema,
-    mcp_client.get_store_temperature,
+# MCPToolset is likely an object that needs to be passed directly or its tools extracted.
+# Based on user example: tools=[maps_toolset, bigquery_toolset]
+# We also want to keep consult_marketing_expert and get_store_temperature.
+agent_tools = [
+    maps_toolset, 
+    bigquery_toolset, 
+    mcp_server.get_store_temperature,
     consult_marketing_expert
 ]
 
 
 # --- Initialize the Plugin ---
+# The BigQueryAgentAnalyticsPlugin logs all agent interactions (prompts, tool calls, responses)
+# to a BigQuery table. This is crucial for auditing, debugging, and analyzing agent performance.
 bq_logging_plugin = BigQueryAgentAnalyticsPlugin(
     project_id=GOOGLE_CLOUD_PROJECT, # project_id is required input from user
     dataset_id=BIGQUERY_DATASET, # dataset_id is required input from user
@@ -107,13 +152,14 @@ bq_logging_plugin = BigQueryAgentAnalyticsPlugin(
 )
 
 # 4. Define the Agent object
+# This is the main "Brain" of the application.
 root_agent = Agent(
     model="gemini-2.5-flash",
     name="chickens_agent",
     description="Agent that answers questions about chicken product retail data, waste optimization, and stock management by executing SQL queries.",
-    # Use the content determined in the try/except block
+    # Use the content determined in the try/except block (either from file or fallback)
     instruction=agent_instruction_content, 
-    tools=tools
+    tools=agent_tools
 )
 
 

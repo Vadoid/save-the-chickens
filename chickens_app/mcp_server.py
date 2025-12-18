@@ -1,113 +1,108 @@
 import os
-from typing import Any, Dict, List
-from mcp.server.fastmcp import FastMCP
-from google.cloud import bigquery
+import random
+import google.auth
+import google.auth.transport.requests
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams 
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("bigquery_mcp_server")
+logger = logging.getLogger("mcp_server")
 
-# Initialize FastMCP
-mcp = FastMCP("bigquery-server")
+MAPS_API_KEY = os.getenv('MAPS_API_KEY', 'no_api_found')
+MAPS_MCP_URL = "https://mapstools.googleapis.com/mcp" 
+BIGQUERY_MCP_URL = "https://bigquery.googleapis.com/mcp" 
 
-# Get configuration from environment
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
-DATASET_ID = os.getenv("BIGQUERY_DATASET", "save_the_chickens")
-
-if not PROJECT_ID:
-    raise ValueError("GOOGLE_CLOUD_PROJECT environment variable is required")
-
-logger.info(f"Starting BigQuery MCP Server for project {PROJECT_ID}, dataset {DATASET_ID}")
-
-# Initialize BigQuery Client
-client = bigquery.Client(project=PROJECT_ID)
-
-@mcp.tool()
-def query_dataset(query: str) -> str:
+def get_maps_mcp_toolset():
     """
-    Execute a SQL query against the BigQuery dataset.
+    Configures and returns the Maps MCP toolset.
     
-    Args:
-        query: The SQL query to execute.
+    This toolset provides access to Google Maps Platform capabilities via MCP,
+    including place search, directions, and distance calculations.
     
     Returns:
-        A string representation of the query results (markdown table).
+        MCPToolset: A configured toolset instance for Maps.
     """
-    try:
-        # Basic safety check (very primitive, but better than nothing)
-        if "DROP" in query.upper() or "DELETE" in query.upper() or "UPDATE" in query.upper():
-             return "Error: Only SELECT queries are allowed."
+    logger.info("Configuring Maps MCP Toolset...")
+    tools = MCPToolset(
+        connection_params=StreamableHTTPConnectionParams(
+            url=MAPS_MCP_URL,
+            headers={    
+                "X-Goog-Api-Key": MAPS_API_KEY
+            }
+        )
+    )
+    logger.info("Maps MCP Toolset configured.")
+    return tools
 
-        logger.info(f"Executing query: {query}")
-        query_job = client.query(query)
-        results = query_job.result()
-        
-        # Convert to dataframe for easy string representation
-        df = results.to_dataframe()
-        
-        if df.empty:
-            return "Query returned no results."
-            
-        return df.to_markdown(index=False)
-    except Exception as e:
-        logger.error(f"Query execution failed: {e}")
-        return f"Error executing query: {str(e)}"
 
-@mcp.tool()
-def list_tables() -> str:
+def get_bigquery_mcp_toolset():   
     """
-    List all tables in the configured dataset.
+    Configures and returns the BigQuery MCP toolset with Application Default Credentials (ADC).
+    
+    This toolset provides access to BigQuery datasets, tables, and query execution
+    capabilities via MCP. It automatically handles OAuth2 authentication using
+    the environment's default credentials.
     
     Returns:
-        A list of table names.
+        MCPToolset: A configured toolset instance for BigQuery.
     """
-    try:
-        dataset_ref = client.dataset(DATASET_ID)
-        tables = client.list_tables(dataset_ref)
-        table_names = [table.table_id for table in tables]
-        return "\n".join(table_names)
-    except Exception as e:
-        return f"Error listing tables: {str(e)}"
-
-@mcp.tool()
-def get_table_schema(table_name: str) -> str:
-    """
-    Get the schema of a specific table.
+    logger.info("Configuring BigQuery MCP Toolset...")
     
-    Args:
-        table_name: The name of the table.
-        
-    Returns:
-        A string description of the schema.
-    """
-    try:
-        dataset_ref = client.dataset(DATASET_ID)
-        table_ref = dataset_ref.table(table_name)
-        table = client.get_table(table_ref)
-        
-        schema_info = []
-        for schema_field in table.schema:
-            schema_info.append(f"{schema_field.name}: {schema_field.field_type} ({schema_field.mode})")
-            
-        return "\n".join(schema_info)
-    except Exception as e:
-        return f"Error getting schema for table {table_name}: {str(e)}"
+    # 1. Get default credentials (ADC)
+    # This automatically finds credentials from `gcloud auth application-default login`
+    # or the service account attached to the compute instance.
+    credentials, project_id = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/bigquery"]
+    )
 
-@mcp.tool()
+    # 2. Refresh credentials to get a valid access token
+    # We need the raw token to pass it in the Authorization header.
+    credentials.refresh(google.auth.transport.requests.Request())
+    oauth_token = credentials.token
+        
+    # 3. Construct Headers
+    # - Authorization: Bearer token for authentication
+    # - x-goog-user-project: Required for billing/quota attribution
+    HEADERS_WITH_OAUTH = {
+        "Authorization": f"Bearer {oauth_token}",
+        "x-goog-user-project": project_id
+    }
+
+    # 4. Initialize Toolset
+    # We use StreamableHTTPConnectionParams to connect to the remote MCP server.
+    tools = MCPToolset(
+        connection_params=StreamableHTTPConnectionParams(
+            url=BIGQUERY_MCP_URL,
+            headers=HEADERS_WITH_OAUTH
+        )
+    )
+    logger.info("BigQuery MCP Toolset configured.")
+    return tools
+
 def get_store_temperature(store_id: str) -> str:
     """
     Get the current temperature of the store's freezer/fridge units.
+    
+    This function simulates retrieving real-time IoT sensor data from store units.
+    It returns temperature readings and status (OK, WARNING, CRITICAL) for
+    various units like Freezers, Fridges, and Display Cases.
     
     Args:
         store_id: The ID of the store (e.g., 'S001').
         
     Returns:
-        A JSON string containing temperature data for units.
+        str: A JSON string containing temperature data for units.
+             Example:
+             {
+               "store_id": "S001",
+               "units": [
+                 {"unit_id": "Freezer-1", "temperature_celsius": -19.5, "status": "OK"},
+                 ...
+               ]
+             }
     """
-    import random
-    import json
-    
     # Mock logic: Generate random temperatures
     # Most are good (-20C to -18C), some are warning (-15C), rare critical (-5C)
     
@@ -130,6 +125,3 @@ def get_store_temperature(store_id: str) -> str:
         })
         
     return json.dumps(data, indent=2)
-
-if __name__ == "__main__":
-    mcp.run()

@@ -4,16 +4,17 @@ This directory contains the source code for the "Save the Chickens" AI agent.
 
 ## Architecture Overview
 
-The agent uses a **Model Context Protocol (MCP)** architecture to decouple the LLM reasoning engine (ADK Agent) from the tool execution environment (BigQuery & IoT Mock).
+The agent uses a **Model Context Protocol (MCP)** architecture to decouple the LLM reasoning engine (ADK Agent) from the tool execution environment. It connects to **Remote MCP Servers** for BigQuery and Maps, and uses a local function for the IoT mock.
 
 ```mermaid
 graph TD
     User[User] <--> WebUI["ADK Web UI"]
     WebUI <--> Agent["ADK Agent (agent.py)"]
-    Agent <-->|Async Calls| Client["MCP Client (mcp_client.py)"]
-    Client <-->|Stdio| Server["MCP Server Process (mcp_server.py)"]
-    Server <-->|SQL| BQ[("BigQuery")]
-    Server <-->|Mock| IoT["IoT Fridge Sensor"]
+    Agent <-->|Remote MCP| BQServer["BigQuery MCP Server"]
+    Agent <-->|Remote MCP| MapsServer["Maps MCP Server"]
+    BQServer <-->|SQL| BQ[("BigQuery")]
+    MapsServer <-->|API| Maps["Google Maps Platform"]
+    Agent <-->|Local Function| IoT["IoT Fridge Sensor (Mock)"]
     Agent <-->|A2A Call| Marketing["Marketing Agent (marketing_app)"]
 ```
 
@@ -23,21 +24,15 @@ graph TD
 - **Role**: The "Brain".
 - **Model**: `gemini-2.5-flash`.
 - **Configuration**: Loads environment variables and instructions.
-- **Tools**: Registers the MCP client methods and A2A tools.
+- **Tools**: Configures MCP toolsets and registers A2A tools.
 
-### 2. MCP Client (`mcp_client.py`)
-- **Role**: The "Bridge".
-- **Function**: Adapts the ADK tool interface to the MCP protocol.
-- **Mechanism**: Spawns the MCP server process on-demand for each tool call using standard input/output (stdio).
-- **Async**: Provides async methods (`query_dataset`, `get_store_temperature`) to avoid blocking the agent loop.
-
-### 3. MCP Server (`mcp_server.py`)
-- **Role**: The "Worker".
-- **Tech**: Built with `mcp.server.fastmcp`.
-- **Tools Provided**:
-    - `query_dataset(query)`: Executes read-only SQL against BigQuery.
-    - `list_tables()`: Lists available tables.
-    - `get_table_schema(table)`: Returns table schema.
+### 2. MCP Tool Configuration (`mcp_server.py`)
+- **Role**: The "Connector".
+- **Function**: Configures `MCPToolset` for remote MCP servers.
+- **Servers**:
+    - **BigQuery MCP**: `https://bigquery.googleapis.com/mcp` (Auth: ADC)
+    - **Maps MCP**: `https://mapstools.googleapis.com/mcp` (Auth: API Key)
+- **Local Tools**:
     - `get_store_temperature(store_id)`: Returns mock IoT sensor data.
 
 ### 4. Instructions (`agent_instructions.txt`)

@@ -60,3 +60,20 @@ async def run_conversation(prompt: str):
        "response": final_response_text,
        "predicted_trajectory": tool_calls
    }
+
+if __name__ == "__main__":
+    import asyncio
+    import logging
+    
+    # Ensure logging is configured to see the debug output from mcp_server
+    logging.basicConfig(level=logging.DEBUG)
+    
+    async def main():
+        print("--- Starting Agent Test Run ---")
+        # Simple prompt to trigger tools
+        result = await run_conversation("List the tables in the dataset.")
+        print("\n--- Result ---")
+        print(f"Response: {result['response']}")
+        print(f"Tool Calls: {result['predicted_trajectory']}")
+
+    asyncio.run(main())

@@ -16,8 +16,8 @@ A production-ready reference implementation of an autonomous retail agent built 
 This project demonstrates a production-ready agent architecture:
 
 1.  **MCP-First Design**:
-    - The agent does not call BigQuery directly. It uses the **Model Context Protocol (MCP)** to communicate with a dedicated tools server.
-    - This decouples the "Reasoning Engine" (Agent) from the "Execution Engine" (Tools), allowing for safer, more modular deployments.
+    - The agent uses the **Model Context Protocol (MCP)** to connect to **Remote MCP Servers** for BigQuery and Maps.
+    - This decouples the "Reasoning Engine" (Agent) from the "Execution Engine" (Tools), allowing for safer, more modular deployments and easy integration of Google Cloud services.
 
 2.  **Multi-Agent Collaboration (A2A)**:
     - **Main Agent**: Handles data analysis, SQL generation, and operational logic.
@@ -47,6 +47,8 @@ This project demonstrates a production-ready agent architecture:
     gcloud auth application-default login
     gcloud config set project <your_project>
     ```
+    
+    > **Note:** Required APIs (Maps, BigQuery, MCP) will be automatically enabled when you run the setup script in Step 3.
 
 2.  **Configure Environment**
     Create a `.env` file:
@@ -56,6 +58,7 @@ This project demonstrates a production-ready agent architecture:
     GOOGLE_CLOUD_PROJECT=<your_project>
     GOOGLE_CLOUD_LOCATION=us-central1
     BIGQUERY_DATASET=save_the_chickens
+    MAPS_API_KEY=<your_maps_api_key>
     EOF
     ```
 
@@ -86,6 +89,7 @@ GOOGLE_GENAI_USE_VERTEXAI=1          # Use Vertex AI
 GOOGLE_CLOUD_PROJECT=<project_id>    # Your GCP project
 GOOGLE_CLOUD_LOCATION=us-central1    # Vertex AI location
 BIGQUERY_DATASET=save_the_chickens   # Optional, defaults to save_the_chickens
+MAPS_API_KEY=<your_api_key>          # Required for Maps tools
 ADK_LOG_LEVEL=WARNING                # Optional, reduces verbosity
 ```
 
@@ -288,8 +292,7 @@ Tests agent on `evaluation_dataset.json`, measures factual accuracy and complete
 save-the-chickens/
 ├── chickens_app/             # Agent Source Code
 │   ├── agent.py             # Agent Configuration
-│   ├── mcp_client.py        # MCP Client Adapter
-│   ├── mcp_server.py        # MCP Server (BigQuery + IoT)
+│   ├── mcp_server.py        # MCP Tool Configuration (BigQuery + Maps + IoT)
 │   ├── agent_instructions.txt # System Prompt
 │   └── README.md            # Technical Documentation
 ├── marketing_app/            # Marketing Agent (A2A)
