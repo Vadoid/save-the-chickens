@@ -95,7 +95,15 @@ graph TD
     MODEL_NAME=gemini-3-flash-preview  # Optional: Defaults to gemini-2.5-flash if not set
     ```
 
-2.  **Start Application**:
+2.  **Data Setup (BigQuery & APIs)**:
+    This script enables required Google Cloud APIs (BigQuery, Maps) and populates the BigQuery dataset with sample data.
+    > **Note**: Run this **outside** of the virtual environment to avoid conflicts.
+    ```bash
+    chmod +x bigquery_source_data/setup_bigquery.sh
+    ./bigquery_source_data/setup_bigquery.sh
+    ```
+
+3.  **Start Application**:
     This script will launch the Marketing Agent Server (background) and the Chickens Agent Web UI.
     ```bash
     ./start_web.sh
