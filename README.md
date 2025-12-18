@@ -13,17 +13,16 @@ The system consists of a primary **Chickens Agent** that orchestrates operations
     *   **Marketing Agent Client**: Connects to the Marketing Agent Server via A2A.
 
 ### Diagram
-### Diagram
 
 ```mermaid
 graph TD
     subgraph "Chickens App (Agent)"
-        Agent[Chickens Agent<br/>(ADK + Gemini)]
+        Agent["Chickens Agent<br/>(ADK + Gemini)"]
         
         subgraph "MCP Clients"
-            MapsClient[Maps Toolset]
-            BQClient[BigQuery Toolset]
-            LocalClient[Local Toolset]
+            MapsClient["Maps Toolset"]
+            BQClient["BigQuery Toolset"]
+            LocalClient["Local Toolset"]
         end
         
         Agent --> MapsClient
@@ -32,18 +31,18 @@ graph TD
     end
 
     subgraph "External Services"
-        MapsAPI[Google Maps API]
-        BQAPI[Google BigQuery API]
+        MapsAPI["Google Maps API"]
+        BQAPI["Google BigQuery API"]
     end
     
     subgraph "Local MCP Server (Stdio)"
-        LocalServer[FastMCP Server<br/>(chickens-local-tools)]
-        StoreTool[Store Temp Tool]
-        MarketingTool[Marketing Client Tool]
+        LocalServer["FastMCP Server<br/>(chickens-local-tools)"]
+        StoreTool["Store Temp Tool"]
+        MarketingTool["Marketing Client Tool"]
     end
 
     subgraph "Marketing App (A2A Server)"
-        MarketingAgent[Marketing Agent<br/>(A2A Server)]
+        MarketingAgent["Marketing Agent<br/>(A2A Server)"]
     end
 
     %% Connections
