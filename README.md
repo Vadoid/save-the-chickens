@@ -1,5 +1,7 @@
 # Save the Chickens - Retail Operations AI Agent (ADK + MCP + A2A)
 
+![Save the Chickens Logo](img/logo.png)
+
 A production-ready reference implementation of an autonomous retail agent built with **Google's Agent Development Kit (ADK)**. Features **Model Context Protocol (MCP)** for secure tool integration (BigQuery, IoT) and **Agent-to-Agent (A2A)** collaboration for creative workflows.
 
 **What it does:**
