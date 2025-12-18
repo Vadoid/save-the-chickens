@@ -23,12 +23,42 @@ The server wraps the executor and exposes standard endpoints:
 ## Running the Server
 To start the Marketing Agent server:
 
-1.  Ensure you are in the project root and have the virtual environment activated.
-2.  Run the server module:
+1.  Ensure you are in the project root (`save-the-chickens`).
+2.  Run the server module using the ADK virtual environment:
     ```bash
-    python -m marketing_app.server
+    # Option 1: Using the venv directly
+    ./.adkvenv/bin/python -m marketing_app.server
+
+    # Option 2: Active venv first
+    # source .adkvenv/bin/activate
+    # python -m marketing_app.server
     ```
-3.  The server will listen on `http://0.0.0.0:8001`.
+3.  The server will listen on `http://localhost:8001`.
 
 ## Interaction
-Once running, you can interact with it using any A2A Client or by sending a raw JSON-RPC request to `/sendMessage`.
+Once running, you can interact with it using any A2A Client or by sending a raw JSON-RPC request to `/`.
+
+### Example (curl)
+Messages are sent using `jsonrpc: 2.0` and the `message/send` method. The `params` must contain a `message` object with a `role` and `parts`.
+
+```bash
+curl -X POST http://localhost:8001/ \
+-H "Content-Type: application/json" \
+-d '{
+  "jsonrpc": "2.0",
+  "method": "message/send",
+  "id": 1,
+  "params": {
+    "message": {
+      "role": "user",
+      "parts": [{"text": "Hello, can you help me with a slogan for organic eggs?"}]
+    }
+  }
+}'
+```
+
+### Get Agent Card (curl)
+To check the agent's capabilities and identity:
+```bash
+curl http://localhost:8001/.well-known/agent-card.json
+```

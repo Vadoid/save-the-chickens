@@ -161,5 +161,5 @@ def create_app():
 
 if __name__ == "__main__":
     # Usage: python -m marketing_app.server
-    print("🚀 Starting Marketing Agent Server on http://0.0.0.0:8001")
-    uvicorn.run(create_app(), host="0.0.0.0", port=8001)
+    print("🚀 Starting Marketing Agent Server on http://localhost:8001")
+    uvicorn.run(create_app(), host="localhost", port=8001)
