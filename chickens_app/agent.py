@@ -86,7 +86,7 @@ Note: Your detailed analysis protocol file was not found. Please operate based o
 
 
 # 1. Define the path to your instructions file
-INSTRUCTION_FILE_PATH = Path(__file__).parent / "agent_instructions.txt"
+INSTRUCTION_FILE_PATH = Path(__file__).parent / "instructions.txt"
 
 # 2. Load the instructions from the file with improved error handling
 try:
@@ -124,21 +124,24 @@ except FileNotFoundError:
 
 
 # 3. Initialize Tools
-from chickens_app import mcp_server
-from chickens_app.a2a_tools import consult_marketing_expert
+from mcp_server.tools import (
+    get_maps_mcp_toolset,
+    get_bigquery_mcp_toolset,
+    get_local_mcp_toolset
+)
 
-maps_toolset = mcp_server.get_maps_mcp_toolset()
-bigquery_toolset = mcp_server.get_bigquery_mcp_toolset()
+maps_toolset = get_maps_mcp_toolset()
+bigquery_toolset = get_bigquery_mcp_toolset()
+local_toolset = get_local_mcp_toolset()
 
 # ADK Agent accepts a list of callables as tools
 # MCPToolset is likely an object that needs to be passed directly or its tools extracted.
 # Based on user example: tools=[maps_toolset, bigquery_toolset]
 # We also want to keep consult_marketing_expert and get_store_temperature.
 agent_tools = [
-    maps_toolset, 
-    bigquery_toolset, 
-    mcp_server.get_store_temperature,
-    consult_marketing_expert
+     maps_toolset, 
+     bigquery_toolset, 
+     local_toolset
 ]
 
 
@@ -154,7 +157,7 @@ bq_logging_plugin = BigQueryAgentAnalyticsPlugin(
 # 4. Define the Agent object
 # This is the main "Brain" of the application.
 root_agent = Agent(
-    model="gemini-2.5-flash",
+    model=os.getenv("MODEL_NAME", "gemini-2.5-flash"),
     name="chickens_agent",
     description="Agent that answers questions about chicken product retail data, waste optimization, and stock management by executing SQL queries.",
     # Use the content determined in the try/except block (either from file or fallback)

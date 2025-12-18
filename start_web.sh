@@ -76,6 +76,12 @@ open_browser() {
     fi
 }
 
+# Start Marketing Server (A2A) in background
+echo "Starting Marketing Agent Server..."
+python -m marketing_app.server > marketing_app/marketing_server.log 2>&1 &
+MARKETING_PID=$!
+echo "Marketing Server PID: $MARKETING_PID"
+
 # Start adk web in the background
 adk web --port "$PORT" &
 ADK_PID=$!
@@ -93,6 +99,18 @@ else
     sleep 3  # Even if check failed, wait a bit before opening
     open_browser
 fi
+
+# Cleanup function to kill background processes
+cleanup() {
+    echo ""
+    echo "Stopping servers..."
+    kill $ADK_PID 2>/dev/null
+    kill $MARKETING_PID 2>/dev/null
+    exit
+}
+
+# Trap Ctrl+C (SIGINT) and call cleanup
+trap cleanup SIGINT
 
 # Wait for the ADK process (this will block until Ctrl+C)
 wait $ADK_PID

@@ -8,7 +8,7 @@ with open(INSTRUCTION_FILE, "r") as f:
 
 # Define the Marketing Agent
 marketing_agent = Agent(
-    model="gemini-2.5-flash",
+    model=os.getenv("MODEL_NAME", "gemini-2.5-flash"),
     name="marketing_agent",
     description="A creative marketing expert who writes social media copy for retail products.",
     instruction=instructions,

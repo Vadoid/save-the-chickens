@@ -1,26 +1,34 @@
-# Marketing Agent (Creative Brain)
+# Marketing Agent App
 
-This is a specialized sub-agent designed to generate creative social media content for the "Save the Chickens" retail chain.
+This application hosts the **Marketing Agent** as a standalone service utilizing the **Agent2Agent (A2A) Protocol**.
 
-> **Note**: This is a sub-component. For the main project documentation, see [../README.md](../README.md).
+## Overview
+The Marketing Agent is an AI expert specialized in generating creative social media copy for retail products. It is exposed via an A2A-compliant HTTP server, allowing other agents (like the Chickens Agent) to consult it remotely.
 
-## Role
-The **Marketing Agent** acts as the "Right Brain" to the main agent's "Left Brain". It takes dry data (stock levels, expiry dates) and turns it into engaging, witty, and urgent marketing copy.
+## A2A Terminology
+This implementation follows the [A2A Protocol Specification](https://a2a-protocol.org/).
 
-## Persona
-- **Tone**: Witty, energetic, pun-loving.
-- **Platform**: Optimized for Twitter/X and Instagram (short, emoji-heavy).
-- **Goal**: Reduce food waste by driving immediate sales.
+### Agent Card
+The **Agent Card** is a JSON document that acts as the agent's "digital business card." It describes the agent's identity, capabilities, and endpoints.
+-   **Endpoint**: `GET /.well-known/agent-card`
+-   **Purpose**: Allows clients to discover and understand how to interact with this agent.
 
-## Integration
-This agent is **not** meant to be run standalone by the user. Instead, it is called programmatically by the main **Chickens Agent** via the `consult_marketing_expert` tool.
+### Agent Executor
+The logic of the agent is encapsulated in an **Agent Executor**. This component receives A2A tasks/messages, processes them using the Google ADK `Runner`, and returns the results.
 
-### Flow
-1.  **Main Agent** identifies expiring stock.
-2.  **Main Agent** calls `consult_marketing_expert(context, goal)`.
-3.  **Marketing Agent** receives the prompt, generates copy, and returns it.
-4.  **Main Agent** presents the copy to the user.
+### A2A Server
+The server wraps the executor and exposes standard endpoints:
+-   `POST /sendMessage`: accepts JSON-RPC 2.0 requests to interact with the agent.
 
-## Files
-- `agent.py`: Defines the agent configuration.
-- `instructions.txt`: The system prompt defining the persona and rules.
+## Running the Server
+To start the Marketing Agent server:
+
+1.  Ensure you are in the project root and have the virtual environment activated.
+2.  Run the server module:
+    ```bash
+    python -m marketing_app.server
+    ```
+3.  The server will listen on `http://0.0.0.0:8001`.
+
+## Interaction
+Once running, you can interact with it using any A2A Client or by sending a raw JSON-RPC request to `/sendMessage`.

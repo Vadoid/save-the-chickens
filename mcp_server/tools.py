@@ -1,5 +1,8 @@
 import os
 import random
+import uuid
+import json
+import httpx
 import google.auth
 import google.auth.transport.requests
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
@@ -81,47 +84,32 @@ def get_bigquery_mcp_toolset():
     logger.info("BigQuery MCP Toolset configured.")
     return tools
 
-def get_store_temperature(store_id: str) -> str:
+from mcp import StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+
+def get_local_mcp_toolset():
     """
-    Get the current temperature of the store's freezer/fridge units.
+    Configures and returns the Local MCP toolset (Marketing Agent Client, Store Temp).
     
-    This function simulates retrieving real-time IoT sensor data from store units.
-    It returns temperature readings and status (OK, WARNING, CRITICAL) for
-    various units like Freezers, Fridges, and Display Cases.
-    
-    Args:
-        store_id: The ID of the store (e.g., 'S001').
-        
-    Returns:
-        str: A JSON string containing temperature data for units.
-             Example:
-             {
-               "store_id": "S001",
-               "units": [
-                 {"unit_id": "Freezer-1", "temperature_celsius": -19.5, "status": "OK"},
-                 ...
-               ]
-             }
+    This connects to the `mcp_server.server` process via Stdio.
     """
-    # Mock logic: Generate random temperatures
-    # Most are good (-20C to -18C), some are warning (-15C), rare critical (-5C)
+    logger.info("Configuring Local MCP Toolset (Stdio)...")
     
-    units = ["Freezer-1", "Freezer-2", "Fridge-Main", "Display-Case"]
-    data = {"store_id": store_id, "units": []}
+    # We run the server module as a subprocess
+    server_params = StdioServerParameters(
+        command="python", # Or usage of sys.executable
+        args=["-m", "mcp_server.server"],
+        env=os.environ.copy() # Pass env vars for configuration
+    )
     
-    for unit in units:
-        # 90% chance of good temp, 10% chance of issue
-        if random.random() > 0.1:
-            temp = round(random.uniform(-22.0, -18.0), 1)
-            status = "OK"
-        else:
-            temp = round(random.uniform(-15.0, -5.0), 1)
-            status = "WARNING" if temp < -10 else "CRITICAL"
-            
-        data["units"].append({
-            "unit_id": unit,
-            "temperature_celsius": temp,
-            "status": status
-        })
-        
-    return json.dumps(data, indent=2)
+    # Wrap in StdioConnectionParams to allow setting a timeout (default is 5s, we need more for LLM)
+    connection_params = StdioConnectionParams(
+        server_params=server_params,
+        timeout=300.0 # 5 minutes timeout for A2A LLM calls
+    )
+    
+    tools = MCPToolset(
+        connection_params=connection_params
+    )
+    logger.info("Local MCP Toolset configured.")
+    return tools
